@@ -16,11 +16,11 @@
     <main class="app-shell">
       <section class="hero-panel">
         <p class="eyebrow">The April Quest</p>
-        <h1>Destroy the Ring in 60 Miles</h1>
+        <h1>Destroy the Ring Together</h1>
         <p class="hero-copy">
-          Hipster Sam and Frodo Bean are jogging from the Shire to Mount Doom.
-          Each of you is chasing 30 miles in April. Together, the fellowship
-          needs 60 miles to reach the fire. Every 5 miles unlocks a new mission.
+          Build a full fellowship, pick your LOTR avatars, and log every mile on
+          the road to Mount Doom. Each runner sets a personal monthly goal and
+          the fellowship target grows with them.
         </p>
         <div id="syncBanner" class="sync-banner">
           <p class="label">Sync Status</p>
@@ -30,13 +30,11 @@
         <div class="quest-row">
           <article class="quest-card total-card">
             <p class="label">Fellowship Progress</p>
-            <p class="value"><span id="totalMiles">0.0</span> / 60 miles</p>
+            <p class="value"><span id="totalMiles">0.0</span> / <span id="goalMiles">0.0</span> miles</p>
             <div class="progress-track">
               <div id="progressFill" class="progress-fill"></div>
             </div>
-            <p id="progressText" class="supporting">
-              60.0 miles to Mount Doom
-            </p>
+            <p id="progressText" class="supporting">Recruit runners to begin the quest.</p>
           </article>
 
           <article class="quest-card ring-card">
@@ -45,104 +43,27 @@
               <div class="mountain"></div>
               <div id="ringToken" class="ring-token"></div>
             </div>
-            <p id="ringText" class="supporting">
-              The ring has barely left the Shire.
-            </p>
+            <p id="ringText" class="supporting">The ring waits for the fellowship to form.</p>
           </article>
         </div>
       </section>
 
-      <section class="character-grid">
-        <article class="character-card sam-card">
-          <div class="character-header">
-            <div class="sprite sam-sprite" aria-hidden="true"></div>
-            <div>
-              <p class="label">Runner One</p>
-              <h2>Hipster Sam</h2>
-              <p class="supporting">
-                Suspender energy. Second breakfast after every run.
-              </p>
-            </div>
+      <section class="mission-panel roster-panel">
+        <div class="mission-header">
+          <div>
+            <p class="eyebrow">Fellowship Roster</p>
+            <h2>Each runner gets a character and personal goal</h2>
           </div>
-
-          <div class="runner-stats">
-            <div>
-              <p class="label">Miles Logged</p>
-              <p class="runner-miles"><span id="samMiles">0.0</span> / 30</p>
-            </div>
-            <div>
-              <p class="label">Entries</p>
-              <p class="runner-miles" id="samEntries">0</p>
-            </div>
-          </div>
-
-          <form class="mile-form" data-runner="sam">
-            <label for="samInput">Add miles</label>
-            <div class="form-row">
-              <input
-                id="samInput"
-                name="miles"
-                type="number"
-                min="0.1"
-                step="0.1"
-                placeholder="3.1"
-                required
-              />
-              <button type="submit">Log Quest</button>
-            </div>
-          </form>
-
-          <ul id="samLog" class="run-log"></ul>
-        </article>
-
-        <article class="character-card frodo-card">
-          <div class="character-header">
-            <div class="sprite frodo-sprite" aria-hidden="true"></div>
-            <div>
-              <p class="label">Runner Two</p>
-              <h2>Frodo Bean</h2>
-              <p class="supporting">
-                Small stride. Huge burden. Elite ring-closing pace.
-              </p>
-            </div>
-          </div>
-
-          <div class="runner-stats">
-            <div>
-              <p class="label">Miles Logged</p>
-              <p class="runner-miles"><span id="frodoMiles">0.0</span> / 30</p>
-            </div>
-            <div>
-              <p class="label">Entries</p>
-              <p class="runner-miles" id="frodoEntries">0</p>
-            </div>
-          </div>
-
-          <form class="mile-form" data-runner="frodo">
-            <label for="frodoInput">Add miles</label>
-            <div class="form-row">
-              <input
-                id="frodoInput"
-                name="miles"
-                type="number"
-                min="0.1"
-                step="0.1"
-                placeholder="4.0"
-                required
-              />
-              <button type="submit">Log Quest</button>
-            </div>
-          </form>
-
-          <ul id="frodoLog" class="run-log"></ul>
-        </article>
+          <button id="addRunnerButton" type="button">Add Fellowship Member</button>
+        </div>
+        <section id="runnerGrid" class="character-grid"></section>
       </section>
 
       <section class="mission-panel">
         <div class="mission-header">
           <div>
             <p class="eyebrow">Quest Milestones</p>
-            <h2>Every 5 Fellowship Miles Unlocks a Mission</h2>
+            <h2>Every 5 fellowship miles unlocks a mission</h2>
           </div>
           <button id="resetButton" class="reset-button" type="button">
             Reset Quest
@@ -160,6 +81,125 @@
         </p>
       </section>
     </main>
+
+    <div id="resetModal" class="modal-shell">
+      <div class="modal-backdrop" data-close-reset></div>
+      <section
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="resetTitle"
+        aria-describedby="resetDescription"
+      >
+        <p class="eyebrow">Danger Zone</p>
+        <h2 id="resetTitle">Reset all logged miles?</h2>
+        <p id="resetDescription" class="supporting">
+          This deletes every shared run entry but keeps the current fellowship
+          roster and each runner's goal.
+        </p>
+        <div class="modal-actions">
+          <button id="cancelResetButton" type="button" class="ghost-button">
+            Keep Quest
+          </button>
+          <button id="confirmResetButton" type="button" class="reset-button">
+            Confirm Reset
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div id="runnerModal" class="modal-shell">
+      <div class="modal-backdrop" data-close-runner></div>
+      <section
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="runnerTitle"
+        aria-describedby="runnerDescription"
+      >
+        <p class="eyebrow">New Fellowship Member</p>
+        <h2 id="runnerTitle">Add a runner to the quest</h2>
+        <p id="runnerDescription" class="supporting">
+          Pick a name, claim a character, and set the number of miles this
+          runner wants to conquer this month.
+        </p>
+
+        <form id="runnerForm" class="stack-form">
+          <label for="runnerName">Runner name</label>
+          <input
+            id="runnerName"
+            name="runnerName"
+            type="text"
+            maxlength="24"
+            placeholder="Merry Miles"
+            required
+          />
+
+          <label for="characterSelect">Character</label>
+          <select id="characterSelect" name="characterKey" required></select>
+
+          <label for="runnerGoal">Monthly goal (miles)</label>
+          <input
+            id="runnerGoal"
+            name="goalMiles"
+            type="number"
+            min="1"
+            step="1"
+            value="30"
+            required
+          />
+
+          <div class="modal-actions">
+            <button id="cancelRunnerButton" type="button" class="ghost-button">
+              Cancel
+            </button>
+            <button id="saveRunnerButton" type="submit">Add To Fellowship</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <template id="runnerCardTemplate">
+      <article class="character-card">
+        <div class="character-header">
+          <div class="sprite" aria-hidden="true"></div>
+          <div>
+            <p class="label runner-role"></p>
+            <h2 class="runner-name"></h2>
+            <p class="supporting runner-flavor"></p>
+          </div>
+        </div>
+
+        <div class="runner-stats">
+          <div>
+            <p class="label">Miles Logged</p>
+            <p class="runner-miles"><span class="runner-mile-value">0.0</span> / <span class="runner-goal-value">0</span></p>
+          </div>
+          <div>
+            <p class="label">Entries</p>
+            <p class="runner-miles runner-entry-count">0</p>
+          </div>
+        </div>
+
+        <form class="mile-form">
+          <label>Log a run</label>
+          <div class="form-grid">
+            <input
+              name="miles"
+              type="number"
+              min="0.1"
+              step="0.1"
+              placeholder="3.1"
+              required
+            />
+            <input name="runDate" type="date" required />
+            <button type="submit">Log Quest</button>
+          </div>
+        </form>
+
+        <ul class="run-log"></ul>
+      </article>
+    </template>
 
     <template id="logItemTemplate">
       <li class="log-item">

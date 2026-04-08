@@ -1,7 +1,7 @@
 :root {
-  --bg: #1f140d;
   --panel: #302015;
   --panel-alt: #452d1e;
+  --panel-soft: rgba(0, 0, 0, 0.18);
   --border: #120b07;
   --gold: #f0c75e;
   --gold-deep: #d8891d;
@@ -29,12 +29,13 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
 .app-shell {
-  width: min(1100px, calc(100% - 32px));
+  width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
   padding: 28px 0 48px;
 }
@@ -72,9 +73,9 @@ h2,
 }
 
 h1 {
-  font-size: clamp(1.4rem, 3vw, 2.5rem);
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
   line-height: 1.4;
-  max-width: 12ch;
+  max-width: 13ch;
 }
 
 h2 {
@@ -91,7 +92,7 @@ label {
 }
 
 .hero-copy {
-  max-width: 58ch;
+  max-width: 60ch;
 }
 
 .quest-row,
@@ -102,7 +103,7 @@ label {
 }
 
 .quest-row {
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   margin-top: 24px;
 }
 
@@ -115,7 +116,7 @@ label {
   margin-top: 20px;
   padding: 14px 16px;
   border: 4px solid var(--border);
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--panel-soft);
 }
 
 .sync-banner[data-status="connected"] {
@@ -132,9 +133,9 @@ label {
 
 .value,
 .runner-miles {
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   color: var(--cream);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .progress-track {
@@ -191,9 +192,13 @@ label {
   transition: left 180ms ease-out, bottom 180ms ease-out, transform 180ms ease-out;
 }
 
+.roster-panel {
+  margin: 28px 0 20px;
+}
+
 .character-grid {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  margin: 28px 0;
+  margin-top: 22px;
 }
 
 .character-card {
@@ -201,6 +206,70 @@ label {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 30%),
     var(--panel-alt);
+}
+
+.character-card[data-character="green"] {
+  background:
+    linear-gradient(180deg, rgba(143, 194, 111, 0.1), transparent 28%),
+    #3d2c1a;
+}
+
+.character-card[data-character="warm"] {
+  background:
+    linear-gradient(180deg, rgba(240, 199, 94, 0.12), transparent 28%),
+    #4a2f1f;
+}
+
+.character-card[data-character="steel"] {
+  background:
+    linear-gradient(180deg, rgba(163, 178, 191, 0.12), transparent 28%),
+    #36281f;
+}
+
+.character-card[data-character="leaf"] {
+  background:
+    linear-gradient(180deg, rgba(111, 173, 109, 0.14), transparent 28%),
+    #3b2f1a;
+}
+
+.character-card[data-character="mist"] {
+  background:
+    linear-gradient(180deg, rgba(222, 228, 230, 0.14), transparent 28%),
+    #403127;
+}
+
+.character-card[data-character="rose"] {
+  background:
+    linear-gradient(180deg, rgba(219, 135, 122, 0.14), transparent 28%),
+    #43271d;
+}
+
+.character-card[data-character="sun"] {
+  background:
+    linear-gradient(180deg, rgba(255, 207, 103, 0.16), transparent 28%),
+    #4a3017;
+}
+
+.character-card[data-character="bark"] {
+  background:
+    linear-gradient(180deg, rgba(142, 110, 71, 0.2), transparent 28%),
+    #35261b;
+}
+
+.character-card[data-character="swamp"] {
+  background:
+    linear-gradient(180deg, rgba(104, 140, 105, 0.16), transparent 28%),
+    #342b20;
+}
+
+.character-card[data-character="ember"] {
+  background:
+    linear-gradient(180deg, rgba(239, 106, 56, 0.18), transparent 28%),
+    #482317;
+}
+
+.empty-card {
+  min-height: 220px;
 }
 
 .character-header {
@@ -218,7 +287,7 @@ label {
   box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.16);
 }
 
-.sam-sprite {
+.sprite-sam {
   background:
     linear-gradient(#3a2a14 0 18%, transparent 18%),
     linear-gradient(90deg, transparent 0 12%, #52382c 12% 24%, transparent 24% 76%, #52382c 76% 88%, transparent 88%),
@@ -226,12 +295,108 @@ label {
   background-color: #7caa54;
 }
 
-.frodo-sprite {
+.sprite-frodo {
   background:
     linear-gradient(#2e1d10 0 18%, transparent 18%),
     linear-gradient(90deg, transparent 0 14%, #d2bb8a 14% 22%, transparent 22% 78%, #d2bb8a 78% 86%, transparent 86%),
     linear-gradient(180deg, transparent 0 30%, #dbc49d 30% 56%, #5a6841 56% 68%, #a05a2a 68% 100%);
   background-color: #90b965;
+}
+
+.sprite-aragorn {
+  background:
+    linear-gradient(#23170d 0 16%, transparent 16%),
+    linear-gradient(90deg, transparent 0 16%, #4a372e 16% 24%, transparent 24% 76%, #4a372e 76% 84%, transparent 84%),
+    linear-gradient(180deg, transparent 0 32%, #d8c09c 32% 54%, #54604e 54% 72%, #6c4b31 72% 100%);
+  background-color: #7e8f5b;
+}
+
+.sprite-gimli {
+  background:
+    linear-gradient(#6d4927 0 18%, transparent 18%),
+    linear-gradient(90deg, transparent 0 12%, #d6c09a 12% 22%, transparent 22% 78%, #d6c09a 78% 88%, transparent 88%),
+    linear-gradient(180deg, transparent 0 26%, #dabf96 26% 48%, #7f5d31 48% 74%, #4a3321 74% 100%);
+  background-color: #986d3b;
+}
+
+.sprite-legolas {
+  background:
+    linear-gradient(#c89d4f 0 18%, transparent 18%),
+    linear-gradient(90deg, transparent 0 12%, #d8c7a2 12% 22%, transparent 22% 78%, #d8c7a2 78% 88%, transparent 88%),
+    linear-gradient(180deg, transparent 0 30%, #e3d3b0 30% 56%, #4f6f4b 56% 74%, #8e5d2f 74% 100%);
+  background-color: #95c87b;
+}
+
+.sprite-gandalf {
+  background:
+    linear-gradient(#d6d4d1 0 16%, transparent 16%),
+    linear-gradient(90deg, transparent 0 16%, #646464 16% 24%, transparent 24% 76%, #646464 76% 84%, transparent 84%),
+    linear-gradient(180deg, transparent 0 30%, #dcd2bf 30% 52%, #bcbcbc 52% 78%, #797979 78% 100%);
+  background-color: #a6b6ba;
+}
+
+.sprite-eowyn {
+  background:
+    linear-gradient(#e5c067 0 16%, transparent 16%),
+    linear-gradient(90deg, transparent 0 16%, #d9c8a9 16% 24%, transparent 24% 76%, #d9c8a9 76% 84%, transparent 84%),
+    linear-gradient(180deg, transparent 0 30%, #ead8bd 30% 56%, #78917b 56% 74%, #c98a5d 74% 100%);
+  background-color: #c69d93;
+}
+
+.sprite-merry {
+  background:
+    linear-gradient(#5a3418 0 18%, transparent 18%),
+    linear-gradient(90deg, transparent 0 12%, #d5be98 12% 22%, transparent 22% 78%, #d5be98 78% 88%, transparent 88%),
+    linear-gradient(180deg, transparent 0 30%, #ddc79d 30% 54%, #5d7f49 54% 72%, #8d5330 72% 100%);
+  background-color: #86ad63;
+}
+
+.sprite-pippin {
+  background:
+    linear-gradient(#70411e 0 18%, transparent 18%),
+    linear-gradient(90deg, transparent 0 12%, #d9c39f 12% 22%, transparent 22% 78%, #d9c39f 78% 88%, transparent 88%),
+    linear-gradient(180deg, transparent 0 30%, #e2ccaa 30% 54%, #6d8a4e 54% 72%, #d18642 72% 100%);
+  background-color: #d3b15f;
+}
+
+.sprite-sauron {
+  background:
+    linear-gradient(#1a1412 0 18%, transparent 18%),
+    linear-gradient(90deg, transparent 0 10%, #f6b253 10% 18%, transparent 18% 82%, #f6b253 82% 90%, transparent 90%),
+    linear-gradient(180deg, transparent 0 26%, #4a403d 26% 46%, #b7331f 46% 72%, #171210 72% 100%);
+  background-color: #422019;
+}
+
+.sprite-tom-bombadil {
+  background:
+    linear-gradient(#4f65be 0 16%, transparent 16%),
+    linear-gradient(90deg, transparent 0 14%, #d7c08e 14% 22%, transparent 22% 78%, #d7c08e 78% 86%, transparent 86%),
+    linear-gradient(180deg, transparent 0 30%, #e1cd9a 30% 54%, #dd4941 54% 74%, #f0bf58 74% 100%);
+  background-color: #7ec06d;
+}
+
+.sprite-treebeard {
+  background:
+    linear-gradient(#6c4b2a 0 18%, transparent 18%),
+    linear-gradient(90deg, transparent 0 12%, #5f4129 12% 22%, transparent 22% 78%, #5f4129 78% 88%, transparent 88%),
+    linear-gradient(180deg, transparent 0 28%, #b69062 28% 54%, #6d5f2c 54% 78%, #4d351d 78% 100%);
+  background-color: #79934c;
+}
+
+.sprite-gollum {
+  background:
+    linear-gradient(#6e6a5f 0 14%, transparent 14%),
+    linear-gradient(90deg, transparent 0 16%, #cac0a7 16% 22%, transparent 22% 78%, #cac0a7 78% 84%, transparent 84%),
+    linear-gradient(180deg, transparent 0 28%, #d2c7a8 28% 50%, #86957d 50% 72%, #73542d 72% 100%);
+  background-color: #7e8e74;
+}
+
+.sprite-balrog {
+  background:
+    linear-gradient(#171311 0 16%, transparent 16%),
+    linear-gradient(90deg, transparent 0 10%, #f6b35a 10% 18%, transparent 18% 82%, #f6b35a 82% 90%, transparent 90%),
+    linear-gradient(180deg, transparent 0 28%, #4f3a2c 28% 48%, #d34a24 48% 74%, #1a1410 74% 100%);
+  background-color: #5b2316;
 }
 
 .runner-stats {
@@ -241,24 +406,26 @@ label {
   margin: 20px 0 18px;
 }
 
-.mile-form label {
-  display: block;
-  margin-bottom: 8px;
-}
-
-.form-row {
-  display: flex;
+.form-grid,
+.stack-form {
+  display: grid;
   gap: 10px;
 }
 
-input {
+.form-grid {
+  grid-template-columns: 1.1fr 1fr auto;
+  align-items: end;
+}
+
+input,
+select {
   width: 100%;
   min-width: 0;
   padding: 10px 12px;
   border: 4px solid var(--border);
   background: #f2dfb4;
   color: var(--ink);
-  font-size: 1.5rem;
+  font-size: 1.35rem;
 }
 
 button {
@@ -277,13 +444,18 @@ button:focus-visible {
   background: #ffd774;
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .run-log {
   list-style: none;
   margin: 18px 0 0;
   padding: 0;
   display: grid;
   gap: 10px;
-  max-height: 240px;
+  max-height: 260px;
   overflow: auto;
 }
 
@@ -294,7 +466,7 @@ button:focus-visible {
   align-items: center;
   padding: 10px 12px;
   border: 4px solid var(--border);
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--panel-soft);
   font-size: 1.4rem;
 }
 
@@ -320,6 +492,46 @@ button:focus-visible {
 .reset-button {
   background: var(--ember);
   color: #fff7ed;
+}
+
+.ghost-button {
+  background: #f2dfb4;
+  color: var(--ink);
+}
+
+.modal-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  place-items: center;
+  padding: 20px;
+}
+
+.modal-shell.is-open {
+  display: grid;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 12, 8, 0.78);
+}
+
+.modal-card {
+  position: relative;
+  width: min(620px, 100%);
+  padding: 24px;
+  background: var(--panel);
+  border: 4px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
 }
 
 .mission-grid {
@@ -355,15 +567,16 @@ button:focus-visible {
   line-height: 1.1;
 }
 
-@media (max-width: 740px) {
+@media (max-width: 760px) {
   .app-shell {
-    width: min(100% - 20px, 1100px);
+    width: min(100% - 20px, 1120px);
     padding-top: 16px;
   }
 
   .hero-panel,
   .mission-panel,
-  .character-card {
+  .character-card,
+  .modal-card {
     padding: 16px;
   }
 
@@ -371,8 +584,10 @@ button:focus-visible {
     grid-template-columns: 1fr;
   }
 
-  .form-row,
-  .mission-header {
+  .form-grid,
+  .mission-header,
+  .modal-actions {
+    grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;
   }
