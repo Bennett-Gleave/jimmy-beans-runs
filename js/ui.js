@@ -1,4 +1,4 @@
-import { CHARACTER_OPTIONS, DEFAULT_RUNNER_GOAL } from "./data.js";
+import { CHARACTER_OPTIONS, CELEBRATION_MESSAGES, DEFAULT_RUNNER_GOAL } from "./data.js";
 import { runnerById } from "./state.js";
 import { todayIsoDate } from "./utils.js";
 import { addRunner, updateRunner, addRun, deleteRun, resetQuest } from "./firebase.js";
@@ -22,6 +22,9 @@ const elements = {
   resetModal: document.getElementById("resetModal"),
   cancelResetButton: document.getElementById("cancelResetButton"),
   confirmResetButton: document.getElementById("confirmResetButton"),
+  celebrationModal: document.getElementById("celebrationModal"),
+  celebrationMessage: document.getElementById("celebrationMessage"),
+  closeCelebrationButton: document.getElementById("closeCelebrationButton"),
 };
 
 let runnerModalMode = "create";
@@ -62,6 +65,19 @@ function closeModal(modalElement, focusElement) {
   }
 }
 
+function randomCelebrationMessage() {
+  return CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)];
+}
+
+function openCelebration(runnerName, miles) {
+  elements.celebrationMessage.textContent = `${runnerName} logged ${miles.toFixed(1)} miles. ${randomCelebrationMessage()}`;
+  openModal(elements.celebrationModal, elements.closeCelebrationButton);
+
+  if (window.Tenor?.render) {
+    window.Tenor.render();
+  }
+}
+
 export function bindModalClose() {
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") {
@@ -75,6 +91,10 @@ export function bindModalClose() {
     if (elements.resetModal.classList.contains("is-open")) {
       closeModal(elements.resetModal, elements.resetButton);
     }
+
+    if (elements.celebrationModal.classList.contains("is-open")) {
+      closeModal(elements.celebrationModal, elements.addRunnerButton);
+    }
   });
 
   elements.runnerModal.addEventListener("click", (event) => {
@@ -86,6 +106,12 @@ export function bindModalClose() {
   elements.resetModal.addEventListener("click", (event) => {
     if (event.target.hasAttribute("data-close-reset")) {
       closeModal(elements.resetModal, elements.resetButton);
+    }
+  });
+
+  elements.celebrationModal.addEventListener("click", (event) => {
+    if (event.target.hasAttribute("data-close-celebration")) {
+      closeModal(elements.celebrationModal, elements.addRunnerButton);
     }
   });
 }
@@ -192,6 +218,7 @@ export function bindUi(db) {
     const miles = Number.parseFloat(form.elements.miles.value);
     const runDate = form.elements.runDate.value || todayIsoDate();
     const runnerId = form.dataset.runnerId;
+    const runner = runnerById(runnerId);
 
     if (!runnerId || !Number.isFinite(miles) || miles <= 0) {
       return;
@@ -205,6 +232,7 @@ export function bindUi(db) {
       await addRun(db, runnerId, miles, runDate);
       form.reset();
       form.elements.runDate.value = todayIsoDate();
+      openCelebration(runner?.name || "A fellowship member", miles);
     } catch (error) {
       console.error(error);
       setSyncState("Could not log miles. Check Firestore rules.", "error");
@@ -219,6 +247,10 @@ export function bindUi(db) {
 
   elements.cancelResetButton.addEventListener("click", () => {
     closeModal(elements.resetModal, elements.resetButton);
+  });
+
+  elements.closeCelebrationButton.addEventListener("click", () => {
+    closeModal(elements.celebrationModal, elements.addRunnerButton);
   });
 
   elements.confirmResetButton.addEventListener("click", async () => {

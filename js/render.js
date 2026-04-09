@@ -10,10 +10,22 @@ const elements = {
   ringToken: document.getElementById("ringToken"),
   ringText: document.getElementById("ringText"),
   missions: document.getElementById("missions"),
+  progressChart: document.getElementById("progressChart"),
+  chartGrid: document.getElementById("chartGrid"),
+  chartArea: document.getElementById("chartArea"),
+  chartLine: document.getElementById("chartLine"),
+  chartPoints: document.getElementById("chartPoints"),
+  chartYTicks: document.getElementById("chartYTicks"),
+  chartXTicks: document.getElementById("chartXTicks"),
+  chartEmpty: document.getElementById("chartEmpty"),
   runnerGrid: document.getElementById("runnerGrid"),
   runnerCardTemplate: document.getElementById("runnerCardTemplate"),
   logItemTemplate: document.getElementById("logItemTemplate"),
 };
+
+const CHART_WIDTH = 720;
+const CHART_HEIGHT = 280;
+const CHART_PADDING = { top: 18, right: 18, bottom: 26, left: 44 };
 
 function runnerNarration(runner) {
   const goal = Math.max(runner.goalMiles, 1);
@@ -199,8 +211,165 @@ export function renderMissions() {
   });
 }
 
+function chartMonthInfo() {
+  const latestRunDate = state.runs
+    .map((run) => run.runDate)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+
+  const baseDate = latestRunDate ? new Date(`${latestRunDate}T12:00:00`) : new Date();
+  const year = baseDate.getFullYear();
+  const monthIndex = baseDate.getMonth();
+
+  return {
+    year,
+    monthIndex,
+    daysInMonth: new Date(year, monthIndex + 1, 0).getDate(),
+  };
+}
+
+function monthlyCumulativeSeries() {
+  const { year, monthIndex, daysInMonth } = chartMonthInfo();
+  const dailyMiles = Array.from({ length: daysInMonth }, () => 0);
+
+  state.runs.forEach((run) => {
+    if (!run.runDate) {
+      return;
+    }
+
+    const [runYear, runMonth, runDay] = run.runDate.split("-").map(Number);
+    if (runYear !== year || runMonth !== monthIndex + 1 || !runDay || runDay > daysInMonth) {
+      return;
+    }
+
+    dailyMiles[runDay - 1] += run.miles;
+  });
+
+  let cumulative = 0;
+  return dailyMiles.map((miles, index) => {
+    cumulative += miles;
+    return { day: index + 1, total: cumulative };
+  });
+}
+
+function chartYMax(series) {
+  const topValue = Math.max(...series.map((point) => point.total), 0);
+  const goal = totalGoalMiles();
+  const rawMax = Math.max(topValue, goal, 5);
+  return Math.ceil(rawMax / 5) * 5;
+}
+
+function chartCoordinates(series, yMax) {
+  const usableWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
+  const usableHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
+  const lastDay = Math.max(series.length - 1, 1);
+
+  return series.map((point, index) => {
+    const x = CHART_PADDING.left + (usableWidth * index) / lastDay;
+    const y = CHART_HEIGHT - CHART_PADDING.bottom - (point.total / yMax) * usableHeight;
+    return { ...point, x, y };
+  });
+}
+
+function renderChart() {
+  const series = monthlyCumulativeSeries();
+  const hasData = state.runs.length > 0 && series.some((point) => point.total > 0);
+  const yMax = chartYMax(series);
+  const coords = chartCoordinates(series, yMax);
+  const baselineY = CHART_HEIGHT - CHART_PADDING.bottom;
+
+  elements.chartGrid.innerHTML = "";
+  elements.chartPoints.innerHTML = "";
+  elements.chartYTicks.innerHTML = "";
+  elements.chartXTicks.innerHTML = "";
+  elements.chartLine.setAttribute("d", "");
+  elements.chartArea.setAttribute("d", "");
+  elements.chartEmpty.hidden = hasData;
+
+  const tickValues = [0, yMax / 2, yMax];
+  tickValues.forEach((value) => {
+    const y = baselineY - ((value || 0) / yMax) * (CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", String(CHART_PADDING.left));
+    line.setAttribute("x2", String(CHART_WIDTH - CHART_PADDING.right));
+    line.setAttribute("y1", String(y));
+    line.setAttribute("y2", String(y));
+    line.setAttribute("class", "chart-grid-line");
+    elements.chartGrid.appendChild(line);
+
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", String(CHART_PADDING.left - 10));
+    label.setAttribute("y", String(y + 5));
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("class", "chart-y-tick");
+    label.textContent = formatMiles(value);
+    elements.chartYTicks.appendChild(label);
+  });
+
+  const xTickDays = Array.from(
+    new Set([1, 8, 15, 22, series.length].filter((day) => day <= series.length)),
+  );
+  xTickDays.forEach((day) => {
+    const tick = document.createElement("span");
+    tick.className = "chart-x-tick";
+    tick.textContent = String(day);
+    elements.chartXTicks.appendChild(tick);
+  });
+
+  if (!hasData) {
+    return;
+  }
+
+  const linePath = coords
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+  const areaPath = `${linePath} L ${coords[coords.length - 1].x} ${baselineY} L ${coords[0].x} ${baselineY} Z`;
+
+  elements.chartLine.setAttribute("d", linePath);
+  elements.chartArea.setAttribute("d", areaPath);
+
+  coords
+    .filter((point) => point.day === 1 || point.day === series.length || point.total > 0)
+    .forEach((point) => {
+      const eyeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      eyeGroup.setAttribute("class", "chart-eye");
+      eyeGroup.setAttribute("transform", `translate(${point.x} ${point.y})`);
+
+      const outer = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+      outer.setAttribute("cx", "0");
+      outer.setAttribute("cy", "0");
+      outer.setAttribute("rx", "9");
+      outer.setAttribute("ry", "5.5");
+      outer.setAttribute("class", "chart-eye-outer");
+
+      const iris = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+      iris.setAttribute("cx", "0");
+      iris.setAttribute("cy", "0");
+      iris.setAttribute("rx", "3.2");
+      iris.setAttribute("ry", "4.2");
+      iris.setAttribute("class", "chart-eye-iris");
+
+      const pupil = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      pupil.setAttribute("x", "-0.9");
+      pupil.setAttribute("y", "-4.3");
+      pupil.setAttribute("width", "1.8");
+      pupil.setAttribute("height", "8.6");
+      pupil.setAttribute("rx", "0.9");
+      pupil.setAttribute("class", "chart-eye-pupil");
+
+      const glow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      glow.setAttribute("d", "M -8 0 Q 0 -9 8 0 M -8 0 Q 0 9 8 0");
+      glow.setAttribute("class", "chart-eye-flare");
+
+      eyeGroup.append(outer, iris, pupil, glow);
+      elements.chartPoints.appendChild(eyeGroup);
+    });
+}
+
 export function render() {
   renderRunnerCards();
   renderProgress();
   renderMissions();
+  renderChart();
 }

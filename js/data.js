@@ -29,8 +29,13 @@ export const CUSTOM_RUNNER_IMAGES = {
   "frodo bean": "./assets/frodo_bean.JPG",
   breezy: "./assets/breezy.JPG",
   "con bombadil": "./assets/con_bombadil.JPG",
+  drewid: "./assets/drewid.JPG",
   "tanner the treacherous": "./assets/tanner_the_treacherous.JPG",
   mason: "./assets/mason.JPG",
+};
+
+export const CUSTOM_CHARACTER_IMAGES = {
+  gollum: "./assets/mason.JPG",
 };
 
 export const MISSION_COPY = [
@@ -44,4 +49,13 @@ export const MISSION_COPY = [
   { title: "Morgul March", description: "Hostile road. Discipline wins." },
   { title: "Cirith Ungol", description: "Climbing section. Grit over comfort." },
   { title: "Gorgoroth Grind", description: "Ash in the air. Finish line ahead." },
+];
+
+export const CELEBRATION_MESSAGES = [
+  "Even the White City would cheer a run like that.",
+  "The road to Mordor shortens with every bold stride.",
+  "A noble effort. The fellowship grows stronger by your feet.",
+  "Not all who wander are lost, but this run was clearly on purpose.",
+  "These miles would earn a respectful nod from Aragorn himself.",
+  "One does not simply log miles that strong without glory.",
 ];

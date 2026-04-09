@@ -199,6 +199,37 @@
       </section>
     </div>
 
+    <div id="celebrationModal" class="modal-shell">
+      <div class="modal-backdrop" data-close-celebration></div>
+      <section
+        class="modal-card celebration-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="celebrationTitle"
+        aria-describedby="celebrationMessage"
+      >
+        <p class="eyebrow">Fellowship Cheers</p>
+        <h2 id="celebrationTitle">A mighty run has been logged</h2>
+        <p id="celebrationMessage" class="supporting"></p>
+        <div class="celebration-gif">
+          <div
+            class="tenor-gif-embed"
+            data-postid="18505463"
+            data-share-method="host"
+            data-aspect-ratio="1.78771"
+            data-width="100%"
+          >
+            <a href="https://tenor.com/view/lord-of-the-rings-boromir-one-does-not-simply-walk-gif-18505463">Lord Of The Rings Boromir GIF</a>
+            from
+            <a href="https://tenor.com/search/lord+of+the+rings-gifs">Lord Of The Rings GIFs</a>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="closeCelebrationButton" type="button">Back To The Quest</button>
+        </div>
+      </section>
+    </div>
+
     <template id="runnerCardTemplate">
       <article class="character-card">
         <div class="card-actions">
@@ -255,5 +286,6 @@
     </template>
 
     <script type="module" src="./app.mjs"></script>
+    <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
   </body>
 </html>

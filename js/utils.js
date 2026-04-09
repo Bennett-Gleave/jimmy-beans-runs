@@ -1,4 +1,4 @@
-import { CHARACTER_OPTIONS, CUSTOM_RUNNER_IMAGES } from "./data.js";
+import { CHARACTER_OPTIONS, CUSTOM_CHARACTER_IMAGES, CUSTOM_RUNNER_IMAGES } from "./data.js";
 
 export function todayIsoDate() {
   const now = new Date();
@@ -37,5 +37,10 @@ export function normalizeRunnerKey(value) {
 }
 
 export function customImageForRunner(runner) {
-  return CUSTOM_RUNNER_IMAGES[runner.id] || CUSTOM_RUNNER_IMAGES[normalizeRunnerKey(runner.name)] || null;
+  return (
+    CUSTOM_RUNNER_IMAGES[runner.id] ||
+    CUSTOM_RUNNER_IMAGES[normalizeRunnerKey(runner.name)] ||
+    CUSTOM_CHARACTER_IMAGES[runner.characterKey] ||
+    null
+  );
 }
