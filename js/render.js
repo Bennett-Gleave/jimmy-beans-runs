@@ -112,6 +112,9 @@ export function renderFellowshipCluster() {
       bubble.style.top = `${pos.y}%`;
       bubble.style.animationDelay = `${pos.delay}s`;
 
+      const frame = document.createElement("div");
+      frame.className = "cluster-frame";
+
       const avatar = document.createElement("div");
       avatar.className = "cluster-avatar";
       const customImage = customImageForRunner(runner);
@@ -121,7 +124,27 @@ export function renderFellowshipCluster() {
       } else {
         avatar.classList.add(`sprite-${character.key}`);
       }
-      bubble.appendChild(avatar);
+
+      const miles = totalMilesForRunner(runner.id);
+      const progressRatio = runner.goalMiles > 0 ? Math.min(miles / runner.goalMiles, 1) : 0;
+      const svgNS = "http://www.w3.org/2000/svg";
+      const r = 28;
+      const circ = 2 * Math.PI * r;
+      const cSvg = document.createElementNS(svgNS, "svg");
+      cSvg.setAttribute("width", "64"); cSvg.setAttribute("height", "64");
+      cSvg.setAttribute("class", "progress-ring"); cSvg.setAttribute("aria-hidden", "true");
+      const cBg = document.createElementNS(svgNS, "circle");
+      cBg.setAttribute("cx", "32"); cBg.setAttribute("cy", "32"); cBg.setAttribute("r", String(r));
+      cBg.setAttribute("class", "progress-ring-bg"); cBg.setAttribute("stroke-dasharray", String(circ));
+      const cFill = document.createElementNS(svgNS, "circle");
+      cFill.setAttribute("cx", "32"); cFill.setAttribute("cy", "32"); cFill.setAttribute("r", String(r));
+      cFill.setAttribute("class", "progress-ring-fill"); cFill.setAttribute("stroke-dasharray", String(circ));
+      cFill.setAttribute("stroke-dashoffset", String(circ * (1 - progressRatio)));
+      cSvg.append(cBg, cFill);
+
+      frame.append(avatar, cSvg);
+      if (progressRatio >= 1) frame.classList.add("legendary");
+      bubble.appendChild(frame);
       cluster.appendChild(bubble);
     });
 }
@@ -171,6 +194,30 @@ export function renderRunnerCards() {
     } else {
       sprite.classList.add(`sprite-${character.key}`);
     }
+    // Progress ring
+    const progressRatio = runner.goalMiles > 0 ? Math.min(miles / runner.goalMiles, 1) : 0;
+    const svgNS = "http://www.w3.org/2000/svg";
+    const r = 51;
+    const circ = 2 * Math.PI * r;
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("width", "110");
+    svg.setAttribute("height", "110");
+    svg.setAttribute("class", "progress-ring");
+    svg.setAttribute("aria-hidden", "true");
+    const bgCircle = document.createElementNS(svgNS, "circle");
+    bgCircle.setAttribute("cx", "55"); bgCircle.setAttribute("cy", "55"); bgCircle.setAttribute("r", String(r));
+    bgCircle.setAttribute("class", "progress-ring-bg");
+    bgCircle.setAttribute("stroke-dasharray", String(circ));
+    const fillCircle = document.createElementNS(svgNS, "circle");
+    fillCircle.setAttribute("cx", "55"); fillCircle.setAttribute("cy", "55"); fillCircle.setAttribute("r", String(r));
+    fillCircle.setAttribute("class", "progress-ring-fill");
+    fillCircle.setAttribute("stroke-dasharray", String(circ));
+    fillCircle.setAttribute("stroke-dashoffset", String(circ * (1 - progressRatio)));
+    svg.append(bgCircle, fillCircle);
+    const spriteFrame = card.querySelector(".sprite-frame");
+    spriteFrame.appendChild(svg);
+    if (progressRatio >= 1) spriteFrame.classList.add("legendary");
+
     roleLabel.textContent = character.label;
     nameLabel.textContent = runner.name;
     flavorLabel.textContent = character.flavor;
