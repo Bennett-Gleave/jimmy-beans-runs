@@ -122,7 +122,7 @@ export function renderRunnerCards() {
     } else {
       sprite.classList.add(`sprite-${character.key}`);
     }
-    roleLabel.textContent = `Runner ${index + 1} · ${character.label}`;
+    roleLabel.textContent = character.label;
     nameLabel.textContent = runner.name;
     flavorLabel.textContent = character.flavor;
     mileValue.textContent = formatMiles(miles);
