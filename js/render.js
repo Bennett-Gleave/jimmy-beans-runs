@@ -239,22 +239,17 @@ export function renderMissions() {
   }
 
   steps.forEach((step) => {
+    const unlocked = totalMiles >= step.miles;
     const card = document.createElement("article");
-    card.className = "mission-card";
+    card.className = unlocked ? "mission-card unlocked" : "mission-card";
 
-    if (totalMiles >= step.miles) {
-      card.classList.add("unlocked");
-    }
+    card.innerHTML = `
+      <div class="mission-marker">${formatMiles(step.miles)} mi</div>
+      <div class="mission-icon">${unlocked ? "⚔" : "🔒"}</div>
+      <h3 class="mission-title">${unlocked ? step.title : "Locked"}</h3>
+      <p class="mission-body">${unlocked ? step.description : `Reach ${formatMiles(step.miles)} miles to unlock.`}</p>
+    `;
 
-    const title = document.createElement("h3");
-    title.textContent = `${formatMiles(step.miles)} Miles`;
-
-    const body = document.createElement("p");
-    body.textContent = totalMiles >= step.miles
-      ? `${step.title}: ${step.description}`
-      : `Locked until mile ${formatMiles(step.miles)}.`;
-
-    card.append(title, body);
     elements.missions.appendChild(card);
   });
 }

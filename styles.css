@@ -932,31 +932,69 @@ button:disabled {
 }
 
 .mission-card {
-  padding: 16px;
-  border: 4px solid var(--border);
-  background: #533423;
-  opacity: 0.5;
-  transform: translateY(0);
-  transition: opacity 160ms ease-out, transform 160ms ease-out, background 160ms ease-out;
+  position: relative;
+  padding: 0;
+  border: 2px solid #4a3018;
+  background: #2a1e12;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+  overflow: hidden;
+  opacity: 0.55;
+  transition: opacity 200ms ease-out, transform 200ms ease-out, box-shadow 200ms ease-out;
 }
 
 .mission-card.unlocked {
-  background: linear-gradient(180deg, #7a4a24 0%, #6a9b44 100%);
   opacity: 1;
-  transform: translateY(-4px);
+  border-color: #7a5a20;
+  background: linear-gradient(160deg, #3a2810 0%, #2e3a18 100%);
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,0.3),
+    0 0 12px rgba(180, 140, 40, 0.2);
+  transform: translateY(-2px);
 }
 
-.mission-card h3 {
-  margin: 0 0 10px;
+.mission-marker {
+  display: block;
+  padding: 6px 12px;
+  background: linear-gradient(90deg, #7a5410 0%, #5a3c0a 50%, #7a5410 100%);
+  border-bottom: 2px solid #3a2608;
+  box-shadow: inset 0 1px 0 rgba(255,220,120,0.2);
   font-family: "Press Start 2P", cursive;
-  font-size: 0.72rem;
-  line-height: 1.5;
+  font-size: 0.6rem;
+  color: #ffe8a0;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  letter-spacing: 0.05em;
 }
 
-.mission-card p {
-  margin: 0;
-  font-size: 1.35rem;
-  line-height: 1.1;
+.mission-icon {
+  position: absolute;
+  top: 28px;
+  right: 12px;
+  font-size: 1.4rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.mission-title {
+  margin: 12px 40px 6px 12px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.65rem;
+  line-height: 1.6;
+  color: #ffe8a0;
+}
+
+.mission-card:not(.unlocked) .mission-title {
+  color: #8a7a60;
+}
+
+.mission-body {
+  margin: 0 12px 14px;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  color: #c8b890;
+}
+
+.mission-card:not(.unlocked) .mission-body {
+  color: #6a5a40;
 }
 
 @media (max-width: 760px) {
