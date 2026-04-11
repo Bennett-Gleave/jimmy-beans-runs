@@ -198,16 +198,59 @@ label {
   overflow: hidden;
 }
 
+.total-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.total-card-header .label {
+  margin: 0;
+}
+
+.total-miles-display {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.total-miles-value {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: #ffe8a0;
+  text-shadow: 0 0 12px rgba(255, 190, 60, 0.5);
+}
+
+.total-miles-sep {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.9rem;
+  color: #7a6040;
+}
+
+.total-miles-goal {
+  font-family: "Press Start 2P", cursive;
+  font-size: 1rem;
+  color: #c8a060;
+}
+
+.total-miles-unit {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.65rem;
+  color: #7a6040;
+  margin-left: 2px;
+}
+
 .ring-ornament {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 92px;
-  height: 92px;
+  width: 52px;
+  height: 52px;
   display: none;
   place-items: center;
   pointer-events: none;
   perspective: 500px;
+  flex-shrink: 0;
 }
 
 .ring-ornament-beams {
@@ -321,56 +364,98 @@ label {
 
 .progress-track {
   width: 100%;
-  height: 28px;
-  margin: 14px 0 10px;
-  background:
-    linear-gradient(90deg, #5b432d 50%, #4e3825 50%),
-    linear-gradient(#0000, #0000);
-  background-size: 14px 100%;
-  border: 4px solid var(--border);
+  height: 22px;
+  margin: 0 0 12px;
+  background: #1a1108;
+  border: 2px solid #3a2608;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(0,0,0,0.5),
+    0 1px 0 rgba(255,200,80,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-track::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 18px,
+    rgba(0,0,0,0.2) 18px,
+    rgba(0,0,0,0.2) 20px
+  );
+  z-index: 1;
+  pointer-events: none;
 }
 
 .progress-fill {
   width: 0;
   height: 100%;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      var(--gold) 0 12px,
-      var(--gold-deep) 12px 24px
-    );
-  transition: width 180ms ease-out;
-}
-
-.ring-scene {
+  background: linear-gradient(
+    180deg,
+    #ffe066 0%,
+    #f0a800 35%,
+    #c87800 65%,
+    #e09020 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255,240,160,0.6),
+    inset 0 -1px 0 rgba(100,50,0,0.4),
+    2px 0 8px rgba(255,180,0,0.4);
+  transition: width 400ms cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  height: 88px;
-  margin: 18px 0 12px;
-  border: 4px solid var(--border);
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, #6aa4b9 0 35%, #88bf6d 35% 72%, #7a4a21 72% 100%);
 }
 
-.mountain {
+.progress-fill::after {
+  content: "";
   position: absolute;
-  inset: auto 0 0 auto;
-  width: 92px;
-  height: 92px;
-  background: linear-gradient(135deg, #26150f 50%, #4d2816 50%);
-  clip-path: polygon(45% 0, 100% 100%, 0 100%);
+  top: 1px;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255,255,200,0.3) 0%, transparent 100%);
+  pointer-events: none;
 }
 
-.ring-token {
+.journey-scene {
+  position: relative;
+  height: 120px;
+  margin: 12px 0 10px;
+  border: 3px solid var(--border);
+  background-image: url("assets/journey.png");
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  background-position-x: 0%;
+  background-position-y: center;
+  transition: background-position-x 4s cubic-bezier(0.25, 0, 0.2, 1);
+  overflow: visible;
+}
+
+.journey-marker {
   position: absolute;
-  left: 8px;
-  bottom: 16px;
-  width: 24px;
-  height: 24px;
-  border: 4px solid #8b5a10;
-  background: #ffd768;
-  box-shadow: inset 0 0 0 4px #f8e8a3;
-  transition: left 180ms ease-out, bottom 180ms ease-out, transform 180ms ease-out;
+  top: -10px;
+  bottom: -3px;
+  left: 0%;
+  transform: translateX(-50%);
+  width: 2px;
+  background: linear-gradient(180deg, transparent 0%, rgba(255,220,80,0.8) 20%, rgba(255,220,80,0.8) 100%);
+  transition: left 4s cubic-bezier(0.25, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.journey-marker::before {
+  content: "▼";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: #ffe850;
+  text-shadow: 0 0 6px rgba(255, 220, 0, 0.9), 0 0 12px rgba(255, 180, 0, 0.6);
+  line-height: 1;
 }
 
 .roster-panel {
@@ -1050,12 +1135,5 @@ button:disabled {
 @media (min-width: 761px) {
   .ring-ornament {
     display: grid;
-  }
-
-  .total-card .label,
-  .total-card .value,
-  .total-card .supporting,
-  .total-card .progress-track {
-    max-width: calc(100% - 110px);
   }
 }

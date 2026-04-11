@@ -8,7 +8,8 @@ const elements = {
   goalMiles: document.getElementById("goalMiles"),
   progressFill: document.getElementById("progressFill"),
   progressText: document.getElementById("progressText"),
-  ringToken: document.getElementById("ringToken"),
+  journeyScene: document.getElementById("journeyScene"),
+  journeyMarker: document.getElementById("journeyMarker"),
   ringText: document.getElementById("ringText"),
   missions: document.getElementById("missions"),
   progressChart: document.getElementById("progressChart"),
@@ -204,16 +205,21 @@ export function renderProgress() {
   const goalMiles = totalGoalMiles();
   const progressRatio = goalMiles > 0 ? Math.min(totalMiles / goalMiles, 1) : 0;
   const remaining = Math.max(goalMiles - totalMiles, 0);
-  const xPosition = 8 + progressRatio * 72;
-  const yLift = Math.min(progressRatio * 10, 7);
 
   elements.totalMiles.textContent = formatMiles(totalMiles);
   elements.goalMiles.textContent = formatMiles(goalMiles);
   elements.progressFill.style.width = `${progressRatio * 100}%`;
-  elements.ringToken.style.left = `${xPosition}%`;
-  elements.ringToken.style.bottom = `${16 + yLift}px`;
-  elements.ringToken.style.transform = progressRatio >= 1 ? "scale(1.15) rotate(12deg)" : "none";
   elements.ringText.textContent = ringNarration(progressRatio, goalMiles);
+
+  // Animate journey image + marker from start to current progress
+  elements.journeyScene.style.backgroundPositionX = "0%";
+  elements.journeyMarker.style.left = "0%";
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      elements.journeyScene.style.backgroundPositionX = `${progressRatio * 100}%`;
+      elements.journeyMarker.style.left = `${progressRatio * 100}%`;
+    });
+  });
 
   if (goalMiles <= 0) {
     elements.progressText.textContent = "Recruit runners to begin the quest.";

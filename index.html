@@ -30,14 +30,21 @@
 
         <div class="quest-row">
           <article class="quest-card total-card">
-            <div class="ring-ornament" aria-hidden="true">
-              <div class="ring-ornament-beams"></div>
-              <div class="ring-ornament-ring">
-                <div class="ring-ornament-inner"></div>
+            <div class="total-card-header">
+              <p class="label">Fellowship Progress</p>
+              <div class="ring-ornament" aria-hidden="true">
+                <div class="ring-ornament-beams"></div>
+                <div class="ring-ornament-ring">
+                  <div class="ring-ornament-inner"></div>
+                </div>
               </div>
             </div>
-            <p class="label">Fellowship Progress</p>
-            <p class="value"><span id="totalMiles">0.0</span> / <span id="goalMiles">0.0</span> miles</p>
+            <div class="total-miles-display">
+              <span class="total-miles-value" id="totalMiles">0.0</span>
+              <span class="total-miles-sep">/</span>
+              <span class="total-miles-goal" id="goalMiles">0.0</span>
+              <span class="total-miles-unit">mi</span>
+            </div>
             <div class="progress-track">
               <div id="progressFill" class="progress-fill"></div>
             </div>
@@ -45,10 +52,9 @@
           </article>
 
           <article class="quest-card ring-card">
-            <p class="label">Ring Status</p>
-            <div class="ring-scene">
-              <div class="mountain"></div>
-              <div id="ringToken" class="ring-token"></div>
+            <p class="label">The Journey</p>
+            <div id="journeyScene" class="journey-scene">
+              <div id="journeyMarker" class="journey-marker"></div>
             </div>
             <p id="ringText" class="supporting">The ring waits for the fellowship to form.</p>
           </article>
