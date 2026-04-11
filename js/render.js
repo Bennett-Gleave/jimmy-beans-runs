@@ -232,8 +232,7 @@ export function renderRunnerCards() {
       const item = elements.logItemTemplate.content.firstElementChild.cloneNode(true);
       item.querySelector(".log-miles").textContent = `${formatMiles(entry.miles)} mi`;
       item.querySelector(".log-date").textContent = parseDateLabel(entry.runDate);
-      const deleteButton = item.querySelector(".delete-run-button");
-      deleteButton.dataset.runId = entry.id;
+      item.dataset.runId = entry.id;
       log.appendChild(item);
     });
 

@@ -127,6 +127,25 @@
       </section>
     </main>
 
+    <div id="deleteRunModal" class="modal-shell">
+      <div class="modal-backdrop" data-close-delete-run></div>
+      <section
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteRunTitle"
+        aria-describedby="deleteRunDescription"
+      >
+        <p class="eyebrow">Remove Entry</p>
+        <h2 id="deleteRunTitle">Delete this run?</h2>
+        <p id="deleteRunDescription" class="supporting"></p>
+        <div class="modal-actions">
+          <button id="cancelDeleteRunButton" type="button" class="ghost-button">Keep It</button>
+          <button id="confirmDeleteRunButton" type="button" class="reset-button">Delete Run</button>
+        </div>
+      </section>
+    </div>
+
     <div id="resetModal" class="modal-shell">
       <div class="modal-backdrop" data-close-reset></div>
       <section
@@ -284,10 +303,9 @@
     </template>
 
     <template id="logItemTemplate">
-      <li class="log-item">
+      <li class="log-item" role="button" tabindex="0" aria-label="Delete run">
         <span class="log-miles"></span>
         <span class="log-date"></span>
-        <button type="button" class="delete-run-button" aria-label="Delete run">✕</button>
       </li>
     </template>
 

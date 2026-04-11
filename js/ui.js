@@ -23,6 +23,10 @@ const elements = {
   celebrationModal: document.getElementById("celebrationModal"),
   celebrationMessage: document.getElementById("celebrationMessage"),
   closeCelebrationButton: document.getElementById("closeCelebrationButton"),
+  deleteRunModal: document.getElementById("deleteRunModal"),
+  deleteRunDescription: document.getElementById("deleteRunDescription"),
+  cancelDeleteRunButton: document.getElementById("cancelDeleteRunButton"),
+  confirmDeleteRunButton: document.getElementById("confirmDeleteRunButton"),
 };
 
 let runnerModalMode = "create";
@@ -92,6 +96,10 @@ export function bindModalClose() {
     if (elements.celebrationModal.classList.contains("is-open")) {
       closeModal(elements.celebrationModal, elements.addRunnerButton);
     }
+
+    if (elements.deleteRunModal.classList.contains("is-open")) {
+      closeModal(elements.deleteRunModal, null);
+    }
   });
 
   elements.runnerModal.addEventListener("click", (event) => {
@@ -109,6 +117,12 @@ export function bindModalClose() {
   elements.celebrationModal.addEventListener("click", (event) => {
     if (event.target.hasAttribute("data-close-celebration")) {
       closeModal(elements.celebrationModal, elements.addRunnerButton);
+    }
+  });
+
+  elements.deleteRunModal.addEventListener("click", (event) => {
+    if (event.target.hasAttribute("data-close-delete-run")) {
+      closeModal(elements.deleteRunModal, null);
     }
   });
 }
@@ -162,9 +176,9 @@ export function bindUi(db) {
     }
   });
 
-  elements.runnerGrid.addEventListener("click", async (event) => {
+  elements.runnerGrid.addEventListener("click", (event) => {
     const editButton = event.target.closest(".edit-runner-button");
-    const deleteRunButton = event.target.closest(".delete-run-button");
+    const logChip = event.target.closest(".log-item");
 
     if (editButton) {
       const runner = runnerById(editButton.dataset.runnerId);
@@ -184,23 +198,36 @@ export function bindUi(db) {
       return;
     }
 
-    if (deleteRunButton) {
-      const runId = deleteRunButton.dataset.runId;
-      if (!runId) {
-        return;
-      }
+    if (logChip) {
+      const runId = logChip.dataset.runId;
+      if (!runId) return;
+      const miles = logChip.querySelector(".log-miles")?.textContent || "";
+      const date = logChip.querySelector(".log-date")?.textContent || "";
+      elements.deleteRunDescription.textContent = `${miles} on ${date}`;
+      elements.confirmDeleteRunButton.dataset.runId = runId;
+      openModal(elements.deleteRunModal, elements.confirmDeleteRunButton);
+    }
+  });
 
-      deleteRunButton.disabled = true;
-      setSyncState("Removing logged run...", "loading");
+  elements.cancelDeleteRunButton.addEventListener("click", () => {
+    closeModal(elements.deleteRunModal, null);
+  });
 
-      try {
-        await deleteRun(db, runId);
-      } catch (error) {
-        console.error(error);
-        setSyncState("Could not remove run. Check Firestore rules.", "error");
-      } finally {
-        deleteRunButton.disabled = false;
-      }
+  elements.confirmDeleteRunButton.addEventListener("click", async () => {
+    const runId = elements.confirmDeleteRunButton.dataset.runId;
+    if (!runId) return;
+
+    elements.confirmDeleteRunButton.disabled = true;
+    elements.cancelDeleteRunButton.disabled = true;
+
+    try {
+      await deleteRun(db, runId);
+      closeModal(elements.deleteRunModal, null);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      elements.confirmDeleteRunButton.disabled = false;
+      elements.cancelDeleteRunButton.disabled = false;
     }
   });
 
