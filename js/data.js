@@ -30,6 +30,7 @@ export const CUSTOM_RUNNER_IMAGES = {
   breezy: "./assets/breezy.JPG",
   "con bombadil": "./assets/con_bombadil.JPG",
   drewid: "./assets/drewid.JPG",
+  jackagorn: "./assets/jackagorn.JPG",
   "tanner the treacherous": "./assets/tanner_the_treacherous.JPG",
   mason: "./assets/mason.JPG",
 };
