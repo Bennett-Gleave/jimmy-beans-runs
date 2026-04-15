@@ -72,8 +72,8 @@
       <section class="mission-panel">
         <div class="mission-header">
           <div>
-            <p class="eyebrow">Quest Milestones</p>
-            <h2>Every 5 fellowship miles unlocks a mission</h2>
+            <p class="eyebrow">Side Quests</p>
+            <h2>Unlock each side quest by reaching the mile requirement</h2>
           </div>
           <button id="resetButton" class="reset-button" type="button">
             Reset Quest
@@ -219,33 +219,40 @@
       </section>
     </div>
 
-    <div id="celebrationModal" class="modal-shell">
-      <div class="modal-backdrop" data-close-celebration></div>
+    <div id="questGameModal" class="modal-shell">
+      <div class="modal-backdrop" data-close-quest-game></div>
       <section
-        class="modal-card celebration-card"
+        class="modal-card quest-game-card"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="celebrationTitle"
-        aria-describedby="celebrationMessage"
+        aria-labelledby="questGameTitle"
+        aria-describedby="questGameDescription"
       >
-        <p class="eyebrow">Fellowship Cheers</p>
-        <h2 id="celebrationTitle">A mighty run has been logged</h2>
-        <p id="celebrationMessage" class="supporting"></p>
-        <div class="celebration-gif">
-          <div
-            class="tenor-gif-embed"
-            data-postid="18505463"
-            data-share-method="host"
-            data-aspect-ratio="1.78771"
-            data-width="100%"
-          >
-            <a href="https://tenor.com/view/lord-of-the-rings-boromir-one-does-not-simply-walk-gif-18505463">Lord Of The Rings Boromir GIF</a>
-            from
-            <a href="https://tenor.com/search/lord+of+the+rings-gifs">Lord Of The Rings GIFs</a>
+        <p class="eyebrow">Playable Side Quest</p>
+        <h2 id="questGameTitle">Flight to the Ford</h2>
+        <p id="questGameDescription" class="supporting">
+          Dodge the Nazgul, keep moving, and survive until the river crossing appears.
+        </p>
+        <div class="quest-game-shell">
+          <canvas id="questGameCanvas" width="640" height="360" aria-label="Flight to the Ford minigame"></canvas>
+          <div class="quest-game-sidebar">
+            <div class="quest-game-panel">
+              <p class="quest-game-label">Controls</p>
+              <p id="questGameControls" class="supporting">Move with <code>A</code> / <code>D</code> or the arrow keys.</p>
+            </div>
+            <div class="quest-game-panel">
+              <p class="quest-game-label">Objective</p>
+              <p id="questGameObjective" class="supporting">Survive the chase long enough to reach the ford.</p>
+            </div>
+            <div class="quest-game-panel">
+              <p class="quest-game-label">Quest State</p>
+              <p id="questGameStatus" class="quest-game-status">Press start to ride east.</p>
+            </div>
+            <div class="modal-actions quest-game-actions">
+              <button id="closeQuestGameButton" type="button" class="ghost-button">Close</button>
+              <button id="startQuestGameButton" type="button">Start Quest</button>
+            </div>
           </div>
-        </div>
-        <div class="modal-actions">
-          <button id="closeCelebrationButton" type="button">Back To The Quest</button>
         </div>
       </section>
     </div>
@@ -305,6 +312,5 @@
 
 
     <script type="module" src="./app.mjs"></script>
-    <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
   </body>
 </html>

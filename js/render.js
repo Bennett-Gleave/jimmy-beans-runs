@@ -1,6 +1,6 @@
 import { state, runnerRuns, totalMilesForRunner, totalGoalMiles, combinedMiles } from "./state.js";
 import { characterFor, customImageForRunner, formatMiles, parseDateLabel, todayIsoDate } from "./utils.js";
-import { MISSION_COPY, MILESTONE_STEP } from "./data.js";
+import { SIDE_QUESTS, PLAYABLE_SIDE_QUESTS } from "./data.js";
 
 const elements = {
   fellowshipCluster: document.getElementById("fellowshipCluster"),
@@ -54,28 +54,12 @@ function buildMissionSteps(goalMiles) {
     return [];
   }
 
-  const steps = [];
-  let miles = MILESTONE_STEP;
-  let index = 0;
-
-  while (miles < goalMiles) {
-    const copy = MISSION_COPY[index % MISSION_COPY.length];
-    steps.push({
-      miles,
-      title: copy.title,
-      description: copy.description,
-    });
-    miles += MILESTONE_STEP;
-    index += 1;
-  }
-
-  steps.push({
-    miles: goalMiles,
-    title: "Mount Doom",
-    description: "Quest complete. The fellowship reached the fire.",
-  });
-
-  return steps;
+  const milesPerQuest = goalMiles / SIDE_QUESTS.length;
+  return SIDE_QUESTS.map((quest, index) => ({
+    miles: milesPerQuest * (index + 1),
+    title: quest.title,
+    description: quest.description,
+  }));
 }
 
 export function renderFellowshipCluster() {
@@ -277,21 +261,29 @@ export function renderMissions() {
   if (steps.length === 0) {
     const empty = document.createElement("article");
     empty.className = "mission-card unlocked";
-    empty.innerHTML = "<h3>Waiting On The Fellowship</h3><p>Add a runner to generate the quest path.</p>";
+    empty.innerHTML = "<h3>Waiting On Side Quests</h3><p>Add a runner to generate the quest path.</p>";
     elements.missions.appendChild(empty);
     return;
   }
 
   steps.forEach((step) => {
     const unlocked = totalMiles >= step.miles;
+    const playableQuest = unlocked ? PLAYABLE_SIDE_QUESTS[step.title] : null;
     const card = document.createElement("article");
     card.className = unlocked ? "mission-card unlocked" : "mission-card";
+    if (playableQuest) {
+      card.classList.add("playable-quest");
+      card.dataset.playableQuest = step.title;
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-label", `Play ${step.title}`);
+    }
 
     card.innerHTML = `
       <div class="mission-marker">${formatMiles(step.miles)} mi</div>
-      <div class="mission-icon">${unlocked ? "⚔" : "🔒"}</div>
-      <h3 class="mission-title">${unlocked ? step.title : "Locked"}</h3>
-      <p class="mission-body">${unlocked ? step.description : `Reach ${formatMiles(step.miles)} miles to unlock.`}</p>
+      <div class="mission-icon">${playableQuest ? "▶" : unlocked ? "⚔" : "🔒"}</div>
+      <h3 class="mission-title">${step.title}</h3>
+      <p class="mission-body">${unlocked ? step.description : `Unlocks at ${formatMiles(step.miles)} miles.`}</p>
     `;
 
     elements.missions.appendChild(card);

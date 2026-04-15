@@ -1033,16 +1033,6 @@ button:disabled {
   box-shadow: var(--shadow);
 }
 
-.celebration-card {
-  width: min(760px, 100%);
-}
-
-.celebration-gif {
-  margin-top: 18px;
-  border: 4px solid var(--border);
-  background: rgba(0, 0, 0, 0.24);
-  overflow: hidden;
-}
 
 .modal-actions {
   display: flex;
@@ -1205,6 +1195,19 @@ button:disabled {
   transform: translateY(-2px);
 }
 
+.mission-card.playable-quest {
+  cursor: pointer;
+}
+
+.mission-card.playable-quest.unlocked:hover,
+.mission-card.playable-quest.unlocked:focus-visible {
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,0.3),
+    0 0 16px rgba(212, 146, 42, 0.35);
+  outline: none;
+}
+
 .mission-marker {
   display: block;
   padding: 6px 12px;
@@ -1250,6 +1253,55 @@ button:disabled {
   color: #6a5a40;
 }
 
+.quest-game-card {
+  width: min(940px, 100%);
+}
+
+.quest-game-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+#questGameCanvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 4px solid #3a2510;
+  background: #140b08;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.quest-game-sidebar {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.quest-game-panel {
+  padding: 12px;
+  border: 2px solid #4a3018;
+  background: rgba(28, 17, 10, 0.9);
+}
+
+.quest-game-label {
+  margin: 0 0 8px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.58rem;
+  color: #ffe8a0;
+}
+
+.quest-game-status {
+  min-height: 3.2rem;
+  color: #f2dfb4;
+}
+
+.quest-game-actions {
+  margin-top: 0;
+}
+
 @media (max-width: 760px) {
   .app-shell {
     width: min(100% - 20px, 1120px);
@@ -1293,6 +1345,10 @@ button:disabled {
 
   .chart-x-ticks {
     padding: 0 8px 12px 28px;
+  }
+
+  .quest-game-shell {
+    grid-template-columns: 1fr;
   }
 
   button {

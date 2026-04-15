@@ -1,6 +1,5 @@
 export const QUEST_ID = "april-quest";
 export const DEFAULT_RUNNER_GOAL = 30;
-export const MILESTONE_STEP = 5;
 
 export const CHARACTER_OPTIONS = [
   { key: "sam", label: "Samwise", flavor: "Second breakfast loyalist. Keeps the whole squad moving.", accent: "warm" },
@@ -39,24 +38,62 @@ export const CUSTOM_CHARACTER_IMAGES = {
   gollum: "./assets/mason.JPG",
 };
 
-export const MISSION_COPY = [
-  { title: "Leave the Shire", description: "Breakfast complete. The quest is officially on." },
-  { title: "Bree Bound", description: "Pints avoided. The road is already looking stronger." },
-  { title: "Rivendell Rally", description: "Council approved. Mileage diplomacy succeeds." },
-  { title: "Moria Miles", description: "Dark patch crossed. Legs still moving." },
-  { title: "Lothlorien Lift", description: "Recovery glow. Form looks elven." },
-  { title: "Rohan Run Club", description: "Open-country miles. Turnover is sharp." },
-  { title: "Gondor Calls", description: "The beacon is lit. No excuses now." },
-  { title: "Morgul March", description: "Hostile road. Discipline wins." },
-  { title: "Cirith Ungol", description: "Climbing section. Grit over comfort." },
-  { title: "Gorgoroth Grind", description: "Ash in the air. Finish line ahead." },
+export const SIDE_QUESTS = [
+  { title: "Leave the Shire", description: "Slip past Hobbiton and begin the long road east." },
+  { title: "Farmer Maggot's Fields", description: "Move fast through the fields before trouble catches up." },
+  { title: "Through the Old Forest", description: "Keep your footing where the woods themselves feel watchful." },
+  { title: "Tom Bombadil's House", description: "Find a pocket of safety and absurd cheer in the wild." },
+  { title: "Barrow-down Escape", description: "Shake off the darkness and get moving again." },
+  { title: "Bree Arrival", description: "Reach the Prancing Pony and regroup for the next leg." },
+  { title: "Weathertop Watch", description: "Climb high ground and hold steady when the path turns exposed." },
+  { title: "Flight to the Ford", description: "Push the pace and race for the river crossing." },
+  { title: "Rivendell Council", description: "Rest, recover, and set the plan with the wise." },
+  { title: "Fellowship Formed", description: "Bind the company together and commit to the quest." },
+  { title: "Caradhras Crossing", description: "Battle the mountain and its brutal conditions." },
+  { title: "Doors of Durin", description: "Find the hidden way forward when the path seems sealed." },
+  { title: "Into Moria", description: "Enter the deep dark and keep moving in spite of it." },
+  { title: "Bridge of Khazad-dum", description: "Face the fire and hold the line at the narrow pass." },
+  { title: "Golden Wood of Lothlorien", description: "Recover your strength beneath the mallorn trees." },
+  { title: "Mirror of Galadriel", description: "Look ahead, stay focused, and refuse the easier path." },
+  { title: "Great River Run", description: "Settle into rhythm and let the miles carry you south." },
+  { title: "Breaking of the Fellowship", description: "Hold the quest together when the road pulls apart." },
+  { title: "Riders of Rohan", description: "Find open ground and run with speed and purpose." },
+  { title: "Fangorn Forest", description: "Press through the ancient woods where progress feels slow." },
+  { title: "Entmoot Called", description: "Gather resolve before the next great push." },
+  { title: "Helm's Deep Stand", description: "Dig in and outlast the hardest stretch of the campaign." },
+  { title: "Paths of the Dead", description: "Take the route no one wants and see it through." },
+  { title: "Siege of Gondor", description: "Answer the call when the pressure is highest." },
+  { title: "Beacon of Minas Tirith", description: "Light the signal and bring the whole fellowship forward." },
+  { title: "Shelob's Lair", description: "Navigate the dark and keep the ring moving." },
+  { title: "Tower of Cirith Ungol", description: "Regroup after the worst of it and climb again." },
+  { title: "March Across Gorgoroth", description: "Endure the ash plain with Mount Doom in sight." },
+  { title: "Crack of Doom", description: "Make the final approach and refuse to stop now." },
+  { title: "Ring Destroyed", description: "Finish the quest and end the burden for good." },
 ];
 
-export const CELEBRATION_MESSAGES = [
-  "Even the White City would cheer a run like that.",
-  "The road to Mordor shortens with every bold stride.",
-  "A noble effort. The fellowship grows stronger by your feet.",
-  "Not all who wander are lost, but this run was clearly on purpose.",
-  "These miles would earn a respectful nod from Aragorn himself.",
-  "One does not simply log miles that strong without glory.",
-];
+export const PLAYABLE_SIDE_QUESTS = {
+  "Flight to the Ford": {
+    title: "Flight to the Ford",
+    description: "Guide Frodo through the Nazgul pursuit and survive long enough to reach the river.",
+  },
+  "Into Moria": {
+    title: "Into Moria",
+    description: "Keep the company moving through the dark and dodge the cave-ins overhead.",
+  },
+  "Helm's Deep Stand": {
+    title: "Helm's Deep Stand",
+    description: "Hold the wall and outlast the Uruk barrage through the storm.",
+  },
+  "Shelob's Lair": {
+    title: "Shelob's Lair",
+    description: "Slip through the web-choked tunnels without getting trapped in the dark.",
+  },
+  "March Across Gorgoroth": {
+    title: "March Across Gorgoroth",
+    description: "Cross the ash plain and avoid the burning ground all the way to the mountain.",
+  },
+  "Ring Destroyed": {
+    title: "Ring Destroyed",
+    description: "Make the final run at Mount Doom and survive the last bursts of fire.",
+  },
+};
