@@ -8,6 +8,7 @@ export const CHARACTER_OPTIONS = [
   { key: "gimli", label: "Gimli", flavor: "Short stride, huge engine, absolutely thrives on stubborn climbs.", accent: "bark" },
   { key: "legolas", label: "Legolas", flavor: "Light feet, elite cadence, suspiciously fresh after long runs.", accent: "leaf" },
   { key: "gandalf", label: "Gandalf", flavor: "Shows up late, drops a huge effort, vanishes mysteriously.", accent: "mist" },
+  { key: "theoden", label: "Theoden", flavor: "Kingly grit. Rallies late and still charges hardest at the horn call.", accent: "sun" },
   { key: "eowyn", label: "Eowyn", flavor: "Unbothered by doubt. Absolutely dusts the Witch-king split.", accent: "rose" },
   { key: "merry", label: "Merry", flavor: "Underrated pace merchant. Quietly stacks consistent miles.", accent: "warm" },
   { key: "pippin", label: "Pippin", flavor: "Chaotic training plan, but somehow still gets it done.", accent: "sun" },
@@ -30,6 +31,9 @@ export const CUSTOM_RUNNER_IMAGES = {
   "con bombadil": "./assets/con_bombadil.JPG",
   drewid: "./assets/drewid.JPG",
   jackagorn: "./assets/jackagorn.JPG",
+  "merry molly": "./assets/merry_molly.JPG",
+  "presto baggins": "./assets/presto_baggins.JPG",
+  rushington: "./assets/rushington.JPG",
   "tanner the treacherous": "./assets/tanner_the_treacherous.JPG",
   mason: "./assets/mason.JPG",
 };
