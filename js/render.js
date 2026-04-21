@@ -255,6 +255,7 @@ export function renderProgress() {
 export function renderMissions() {
   const steps = buildMissionSteps(totalGoalMiles());
   const totalMiles = combinedMiles();
+  const devMode = state.devMode;
 
   elements.missions.innerHTML = "";
 
@@ -268,22 +269,25 @@ export function renderMissions() {
 
   steps.forEach((step) => {
     const unlocked = totalMiles >= step.miles;
-    const playableQuest = unlocked ? PLAYABLE_SIDE_QUESTS[step.title] : null;
+    const playableQuest = (unlocked || devMode) ? PLAYABLE_SIDE_QUESTS[step.title] : null;
     const card = document.createElement("article");
     card.className = unlocked ? "mission-card unlocked" : "mission-card";
+    if (devMode && !unlocked) {
+      card.classList.add("dev-visible");
+    }
     if (playableQuest) {
       card.classList.add("playable-quest");
       card.dataset.playableQuest = step.title;
       card.setAttribute("role", "button");
       card.setAttribute("tabindex", "0");
-      card.setAttribute("aria-label", `Play ${step.title}`);
+      card.setAttribute("aria-label", `${devMode && !unlocked ? "Preview" : "Play"} ${step.title}`);
     }
 
     card.innerHTML = `
       <div class="mission-marker">${formatMiles(step.miles)} mi</div>
       <div class="mission-icon">${playableQuest ? "▶" : unlocked ? "⚔" : "🔒"}</div>
       <h3 class="mission-title">${step.title}</h3>
-      <p class="mission-body">${unlocked ? step.description : `Unlocks at ${formatMiles(step.miles)} miles.`}</p>
+      <p class="mission-body">${unlocked || devMode ? step.description : `Unlocks at ${formatMiles(step.miles)} miles.`}</p>
     `;
 
     elements.missions.appendChild(card);

@@ -1,7 +1,8 @@
 import { CHARACTER_OPTIONS, DEFAULT_RUNNER_GOAL, PLAYABLE_SIDE_QUESTS } from "./data.js";
-import { runnerById } from "./state.js";
+import { combinedMiles, runnerById, setDevMode, state, totalGoalMiles } from "./state.js";
 import { todayIsoDate } from "./utils.js";
 import { addRunner, updateRunner, addRun, deleteRun, resetQuest } from "./firebase.js";
+import { render } from "./render.js";
 
 const elements = {
   setupPanel: document.getElementById("setupPanel"),
@@ -31,9 +32,20 @@ const elements = {
   questGameControls: document.getElementById("questGameControls"),
   questGameObjective: document.getElementById("questGameObjective"),
   questGameStatus: document.getElementById("questGameStatus"),
+  questTriviaPanel: document.getElementById("questTriviaPanel"),
+  questTriviaPrompt: document.getElementById("questTriviaPrompt"),
+  questTriviaOptions: document.getElementById("questTriviaOptions"),
   questGameCanvas: document.getElementById("questGameCanvas"),
   startQuestGameButton: document.getElementById("startQuestGameButton"),
   closeQuestGameButton: document.getElementById("closeQuestGameButton"),
+  endingModal: document.getElementById("endingModal"),
+  endingCanvas: document.getElementById("endingCanvas"),
+  endingStatus: document.getElementById("endingStatus"),
+  endingProgressFill: document.getElementById("endingProgressFill"),
+  playEndingButton: document.getElementById("playEndingButton"),
+  closeEndingButton: document.getElementById("closeEndingButton"),
+  closeEndingIconButton: document.getElementById("closeEndingIconButton"),
+  devModeButton: document.getElementById("devModeButton"),
 };
 
 let runnerModalMode = "create";
@@ -58,6 +70,59 @@ let questGameState = {
 const QUEST_GAME_CANVAS_WIDTH = 640;
 const QUEST_GAME_CANVAS_HEIGHT = 360;
 const QUEST_GAME_LANES = [156, 308, 460];
+const ENDING_CANVAS_WIDTH = 720;
+const ENDING_CANVAS_HEIGHT = 404;
+const ENDING_DURATION_MS = 12000;
+const HELMS_TRIVIA_QUESTIONS = [
+  {
+    prompt: "Who leads the defense at Helm's Deep alongside Aragorn?",
+    options: ["Eomer", "Theoden", "Faramir", "Denethor"],
+    answer: "Theoden",
+  },
+  {
+    prompt: "What explosive weapon do the Uruk-hai use at Helm's Deep?",
+    options: ["Dragon fire", "Black powder bomb", "Oil catapult", "Morgul flare"],
+    answer: "Black powder bomb",
+  },
+  {
+    prompt: "Who arrives at dawn to turn the battle?",
+    options: ["Gandalf", "Elrond", "Boromir", "Treebeard"],
+    answer: "Gandalf",
+  },
+  {
+    prompt: "Which people defend Helm's Deep with Rohan?",
+    options: ["Dwarves", "Elves", "Hobbits", "Corsairs"],
+    answer: "Elves",
+  },
+  {
+    prompt: "What kingdom does Helm's Deep belong to?",
+    options: ["Gondor", "Mordor", "Rohan", "Dale"],
+    answer: "Rohan",
+  },
+  {
+    prompt: "Who says 'So it begins' at Helm's Deep?",
+    options: ["Aragorn", "Theoden", "Legolas", "Gimli"],
+    answer: "Theoden",
+  },
+  {
+    prompt: "What is the fortress also called?",
+    options: ["The Hornburg", "Minas Keep", "Barad Hall", "The White Wall"],
+    answer: "The Hornburg",
+  },
+  {
+    prompt: "Who keeps count with Legolas during the battle?",
+    options: ["Aragorn", "Gimli", "Haldir", "Eowyn"],
+    answer: "Gimli",
+  },
+];
+
+let endingVideoState = {
+  animationFrameId: null,
+  playing: false,
+  startedAtMs: 0,
+  frameMs: 0,
+  shownForGoalKey: null,
+};
 
 export function setSyncState(_message, _status) {
   // sync banner removed from UI
@@ -80,6 +145,12 @@ export function populateCharacterOptions() {
   });
 }
 
+function updateDevModeButton() {
+  elements.devModeButton.textContent = state.devMode ? "< DEV MODE: ON >" : "< DEV MODE >";
+  elements.devModeButton.classList.toggle("is-active", state.devMode);
+  elements.devModeButton.setAttribute("aria-pressed", String(state.devMode));
+}
+
 function openModal(modalElement, focusElement) {
   modalElement.classList.add("is-open");
   if (focusElement) {
@@ -100,6 +171,23 @@ function questCanvasContext() {
 
 function setQuestGameStatus(message) {
   elements.questGameStatus.textContent = message;
+}
+
+function setQuestTriviaState(visible, prompt = "", options = []) {
+  elements.questTriviaPanel.hidden = !visible;
+  elements.questTriviaPrompt.textContent = prompt;
+  elements.questTriviaOptions.innerHTML = "";
+
+  if (!visible) return;
+
+  options.forEach((option) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "quest-trivia-option";
+    button.textContent = option;
+    button.dataset.triviaOption = option;
+    elements.questTriviaOptions.appendChild(button);
+  });
 }
 
 function stopQuestGameLoop() {
@@ -231,9 +319,242 @@ function drawHazardBlock(ctx, hazard, palette = { outer: "#191013", inner: "#3d2
   drawPixelRect(ctx, hazard.x + Math.max(Math.floor(hazard.width / 2) - 3, 1), hazard.y + hazard.height - 10, 6, 6, palette.glow);
 }
 
+function endingCanvasContext() {
+  return elements.endingCanvas?.getContext("2d");
+}
+
+function setEndingStatus(message) {
+  elements.endingStatus.textContent = message;
+}
+
+function setEndingProgress(progressRatio) {
+  elements.endingProgressFill.style.width = `${Math.max(0, Math.min(progressRatio, 1)) * 100}%`;
+}
+
+function stopEndingPlayback() {
+  if (endingVideoState.animationFrameId) {
+    cancelAnimationFrame(endingVideoState.animationFrameId);
+    endingVideoState.animationFrameId = null;
+  }
+  endingVideoState.playing = false;
+  elements.playEndingButton.disabled = false;
+}
+
+function drawPixelText(ctx, text, x, y, color = "#f7e7bf") {
+  ctx.fillStyle = color;
+  ctx.font = '20px "VT323"';
+  ctx.fillText(text, x, y);
+}
+
+function drawEndingCharacter(ctx, x, y, palette, frame = 0, facing = 1) {
+  drawPixelRect(ctx, x + 6, y, 12, 10, palette.hair);
+  drawPixelRect(ctx, x + 4, y + 8, 16, 14, palette.skin);
+  drawPixelRect(ctx, x + 4, y + 20, 16, 16, palette.body);
+  drawPixelRect(ctx, x + (facing > 0 ? 18 : 0), y + 10, 6, 10, palette.accent);
+  drawPixelRect(ctx, x + 6, y + 36, 5, 10, palette.leg);
+  drawPixelRect(ctx, x + 13, y + 36, 5, 10, palette.leg);
+  if (frame % 2 === 0) {
+    drawPixelRect(ctx, x + 2, y + 38, 4, 8, palette.leg);
+    drawPixelRect(ctx, x + 18, y + 38, 4, 8, palette.leg);
+  }
+}
+
+function drawMasegoth(ctx, x, y, frame = 0) {
+  drawPixelRect(ctx, x + 6, y, 20, 12, "#463038");
+  drawPixelRect(ctx, x + 4, y + 10, 24, 18, "#826877");
+  drawPixelRect(ctx, x + 2, y + 28, 28, 20, "#5d4350");
+  drawPixelRect(ctx, x, y + 18, 8, 18, "#3c2224");
+  drawPixelRect(ctx, x + 24, y + 18, 8, 18, "#3c2224");
+  drawPixelRect(ctx, x + 10, y + 50, 6, 12, "#3c2224");
+  drawPixelRect(ctx, x + 18, y + 50, 6, 12, "#3c2224");
+  drawPixelRect(ctx, x + 10, y + 8, 3, 3, "#ffd36d");
+  drawPixelRect(ctx, x + 19, y + 8, 3, 3, "#ffd36d");
+  if (frame % 2 === 0) {
+    drawPixelRect(ctx, x + 30, y + 12, 8, 18, "#ff7a2f");
+  }
+}
+
+function drawRing(ctx, x, y) {
+  drawPixelRect(ctx, x, y + 2, 10, 6, "#d99f25");
+  drawPixelRect(ctx, x + 2, y, 6, 2, "#ffd66a");
+  drawPixelRect(ctx, x + 2, y + 8, 6, 2, "#ffd66a");
+  drawPixelRect(ctx, x + 3, y + 3, 4, 4, "#2a1a10");
+}
+
+function drawLavaBurst(ctx, x, y, scale = 1) {
+  drawPixelRect(ctx, x, y, 8 * scale, 14 * scale, "#ff7a2f");
+  drawPixelRect(ctx, x + 2 * scale, y - 4 * scale, 4 * scale, 6 * scale, "#ffd36d");
+}
+
+function drawEndingFrame(frameMs) {
+  const ctx = endingCanvasContext();
+  if (!ctx) return;
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, ENDING_CANVAS_WIDTH, ENDING_CANVAS_HEIGHT);
+
+  const beat = Math.floor(frameMs / 220);
+  if (frameMs < 8600) {
+    drawPixelRect(ctx, 0, 0, ENDING_CANVAS_WIDTH, 160, "#2a1712");
+    drawPixelRect(ctx, 0, 160, ENDING_CANVAS_WIDTH, 244, "#1a110d");
+    drawPixelRect(ctx, 0, 312, ENDING_CANVAS_WIDTH, 92, "#4a2116");
+    drawPixelRect(ctx, 0, 344, ENDING_CANVAS_WIDTH, 60, "#ff7a2f");
+    drawPixelRect(ctx, 70, 110, 160, 80, "#25140f");
+    drawPixelRect(ctx, 510, 96, 130, 94, "#25140f");
+    drawPixelRect(ctx, 308, 70, 120, 120, "#362117");
+    drawPixelRect(ctx, 348, 38, 42, 40, "#26160f");
+    drawPixelRect(ctx, 364, 8, 10, 36, "#ff7a2f");
+    drawPixelRect(ctx, 360, 0, 18, 12, "#ffd36d");
+    for (let i = 0; i < 14; i += 1) {
+      drawPixelRect(ctx, 20 + i * 54, 298 + (i % 2) * 6, 28, 14, "#5f4029");
+    }
+
+    if (frameMs < 3600) {
+      const walk = frameMs / 3600;
+      const frodoX = 90 + walk * 230;
+      const samX = 42 + walk * 220;
+      drawEndingCharacter(ctx, samX, 254 + (beat % 2), { skin: "#f0dfbf", hair: "#734325", body: "#4b7a35", accent: "#c8e0f7", leg: "#5e3e24" }, beat, 1);
+      drawEndingCharacter(ctx, frodoX, 248 + ((beat + 1) % 2), { skin: "#f0dfbf", hair: "#5e3a22", body: "#7684a5", accent: "#f8f1ce", leg: "#5e3e24" }, beat, 1);
+      drawRing(ctx, frodoX + 24, 268);
+      drawPixelText(ctx, "Mount Doom", 536, 56, "#f0c75e");
+    } else if (frameMs < 6200) {
+      const attack = (frameMs - 3600) / 2600;
+      const frodoX = 320;
+      const samX = 258;
+      const maseX = 560 - attack * 180;
+      const maseY = 212 - Math.sin(attack * Math.PI) * 74;
+      drawEndingCharacter(ctx, samX, 255 + (beat % 2), { skin: "#f0dfbf", hair: "#734325", body: "#4b7a35", accent: "#c8e0f7", leg: "#5e3e24" }, beat, 1);
+      drawEndingCharacter(ctx, frodoX, 249, { skin: "#f0dfbf", hair: "#5e3a22", body: "#7684a5", accent: "#f8f1ce", leg: "#5e3e24" }, beat, 1);
+      drawRing(ctx, frodoX + 24, 268);
+      drawMasegoth(ctx, maseX, maseY, beat);
+      drawPixelText(ctx, "MaseGoth attacks", 26, 44, "#ffd36d");
+    } else {
+      const toss = (frameMs - 6200) / 2400;
+      const frodoX = 330;
+      const samX = 268;
+      const arcX = 390 + toss * 120;
+      const arcY = 224 - Math.sin(toss * Math.PI) * 102;
+      drawEndingCharacter(ctx, samX, 255 + (beat % 2), { skin: "#f0dfbf", hair: "#734325", body: "#4b7a35", accent: "#c8e0f7", leg: "#5e3e24" }, beat, 1);
+      drawEndingCharacter(ctx, frodoX, 248, { skin: "#f0dfbf", hair: "#5e3a22", body: "#7684a5", accent: "#f8f1ce", leg: "#5e3e24" }, beat, 1);
+      drawMasegoth(ctx, arcX, arcY, beat);
+      drawRing(ctx, arcX + 34, arcY + 16);
+      drawLavaBurst(ctx, 548, 312 - (beat % 3) * 6, 2);
+      drawPixelText(ctx, "Frodo Bean throws him in", 24, 44, "#ffd36d");
+    }
+  } else {
+    drawPixelRect(ctx, 0, 0, ENDING_CANVAS_WIDTH, 180, "#224b2b");
+    drawPixelRect(ctx, 0, 180, ENDING_CANVAS_WIDTH, 224, "#3b271b");
+    drawPixelRect(ctx, 0, 322, ENDING_CANVAS_WIDTH, 82, "#6f4322");
+    for (let i = 0; i < 10; i += 1) {
+      drawPixelRect(ctx, 32 + i * 68, 54, 12, 110, "#2f381f");
+      drawPixelRect(ctx, 12 + i * 68, 74, 52, 16, "#4b7a35");
+      drawPixelRect(ctx, 8 + i * 68, 88, 60, 12, "#5d9044");
+    }
+    drawPixelText(ctx, "Quest complete", 28, 42, "#f0c75e");
+    const crew = [
+      { x: 110, body: "#4b7a35", hair: "#734325" },
+      { x: 166, body: "#7684a5", hair: "#5e3a22" },
+      { x: 222, body: "#6c6f78", hair: "#5e5d60" },
+      { x: 278, body: "#8b6f37", hair: "#5b4221" },
+      { x: 334, body: "#5a7b49", hair: "#4f3f20" },
+      { x: 390, body: "#7f6ba5", hair: "#66485b" },
+    ];
+    crew.forEach((member, index) => {
+      drawEndingCharacter(ctx, member.x, 244 + ((beat + index) % 2) * 2, { skin: "#f0dfbf", hair: member.hair, body: member.body, accent: "#f8f1ce", leg: "#5e3e24" }, beat + index, 1);
+      drawPixelRect(ctx, member.x - 4, 232 - ((beat + index) % 2) * 6, 4, 20, "#f8f1ce");
+      drawPixelRect(ctx, member.x + 24, 232 - ((beat + index) % 2) * 6, 4, 20, "#f8f1ce");
+    });
+    drawPixelRect(ctx, 574, 286, 56, 42, "#ff7a2f");
+    drawPixelRect(ctx, 582, 272, 40, 20, "#ffd36d");
+    drawMasegoth(ctx, 590, 208, beat);
+    drawPixelRect(ctx, 604, 186 - (beat % 2) * 8, 4, 18, "#f8f1ce");
+    drawPixelRect(ctx, 628, 186 - (beat % 2) * 8, 4, 18, "#f8f1ce");
+    drawPixelText(ctx, "Even MaseGoth is lava-cheering", 26, 76, "#f7e7bf");
+  }
+}
+
+function endingVideoTick(timestamp) {
+  if (!endingVideoState.playing) return;
+  if (!endingVideoState.startedAtMs) {
+    endingVideoState.startedAtMs = timestamp - endingVideoState.frameMs;
+  }
+  endingVideoState.frameMs = Math.min(timestamp - endingVideoState.startedAtMs, ENDING_DURATION_MS);
+  drawEndingFrame(endingVideoState.frameMs);
+  setEndingProgress(endingVideoState.frameMs / ENDING_DURATION_MS);
+
+  if (endingVideoState.frameMs >= ENDING_DURATION_MS) {
+    stopEndingPlayback();
+    elements.playEndingButton.textContent = "Replay Finale";
+    setEndingStatus("Finale complete. Replay any time.");
+    return;
+  }
+
+  endingVideoState.animationFrameId = requestAnimationFrame(endingVideoTick);
+}
+
+function openEndingModal(autoPlay = true) {
+  drawEndingFrame(endingVideoState.frameMs);
+  setEndingProgress(endingVideoState.frameMs / ENDING_DURATION_MS);
+  elements.playEndingButton.textContent = endingVideoState.frameMs > 0 ? "Replay Finale" : "Play Finale";
+  openModal(elements.endingModal, elements.playEndingButton);
+  setEndingStatus(autoPlay ? "Playing the dev-mode finale reel." : "Ready to play the finale.");
+  if (autoPlay) {
+    playEndingVideo(true);
+  }
+}
+
+function closeEndingModal() {
+  stopEndingPlayback();
+  setEndingStatus("Ready to play the finale.");
+  closeModal(elements.endingModal, elements.devModeButton);
+}
+
+function playEndingVideo(restart = false) {
+  if (restart) {
+    endingVideoState.frameMs = 0;
+    endingVideoState.startedAtMs = 0;
+  }
+  stopEndingPlayback();
+  endingVideoState.playing = true;
+  elements.playEndingButton.textContent = "Playing...";
+  elements.playEndingButton.disabled = true;
+  setEndingStatus("Hipster Sam and Frodo Bean carry the ring to Mount Doom.");
+  endingVideoState.startedAtMs = performance.now() - endingVideoState.frameMs;
+  endingVideoTick(endingVideoState.startedAtMs);
+}
+
+export function syncEndingSequence(forcePreview = false) {
+  const goal = totalGoalMiles();
+  const complete = goal > 0 && combinedMiles() >= goal;
+  const goalKey = String(goal);
+
+  if (!complete) {
+    endingVideoState.shownForGoalKey = null;
+  }
+
+  if (!state.devMode) {
+    if (elements.endingModal.classList.contains("is-open")) {
+      closeEndingModal();
+    }
+    return;
+  }
+
+  if (forcePreview || !complete) {
+    openEndingModal(false);
+    return;
+  }
+
+  if (complete && endingVideoState.shownForGoalKey !== goalKey) {
+    endingVideoState.shownForGoalKey = goalKey;
+    endingVideoState.frameMs = 0;
+    openEndingModal(true);
+  }
+}
+
 function finishQuestGame(message, buttonLabel) {
   stopQuestGameLoop();
   setQuestGameStatus(message);
+  setQuestTriviaState(false);
   elements.startQuestGameButton.textContent = buttonLabel;
   elements.startQuestGameButton.disabled = false;
 }
@@ -490,6 +811,101 @@ function updateFordPacman(deltaMs, config) {
   questGameState.elapsedMs += deltaMs;
 }
 
+function pickHelmsTriviaQuestion() {
+  return HELMS_TRIVIA_QUESTIONS[Math.floor(Math.random() * HELMS_TRIVIA_QUESTIONS.length)];
+}
+
+function startHelmsTriviaPhase(data) {
+  data.mode = "trivia";
+  data.strikesRemaining = 5;
+  data.activeQuestion = pickHelmsTriviaQuestion();
+  setQuestGameStatus("A ladder landed. Answer correctly to cut down 5 Uruk-hai.");
+  setQuestTriviaState(true, data.activeQuestion.prompt, data.activeQuestion.options);
+}
+
+function resolveHelmsTriviaAnswer(selectedOption) {
+  const config = activeQuestConfig();
+  const data = questGameState.questData;
+  if (!config || !data || data.mode !== "trivia" || !data.activeQuestion) return;
+
+  if (selectedOption === data.activeQuestion.answer) {
+    data.strikesRemaining -= 1;
+    if (data.strikesRemaining <= 0) {
+      data.ladderActive = false;
+      data.mode = "defense";
+      data.laddersStopped += 1;
+      data.activeQuestion = null;
+      setQuestTriviaState(false);
+      setQuestGameStatus(`You cleared the wall. ${data.laddersStopped} / ${config.targetLadders} ladders pushed off.`);
+      data.nextSpawnDelayMs = 700;
+      if (data.laddersStopped >= config.targetLadders) {
+        finishQuestGame(config.successText, "Play Again");
+      }
+      return;
+    }
+
+    data.activeQuestion = pickHelmsTriviaQuestion();
+    setQuestGameStatus(`Good hit. ${data.strikesRemaining} enemies left on the ladder.`);
+    setQuestTriviaState(true, data.activeQuestion.prompt, data.activeQuestion.options);
+    return;
+  }
+
+  setQuestGameStatus("Wrong answer. The attackers keep pressing the wall.");
+}
+
+function updateHelmsDeep(deltaMs, config) {
+  const data = questGameState.questData;
+  const input = currentInput();
+
+  if (data.mode === "defense") {
+    if (!data.ladderActive) {
+      data.nextSpawnDelayMs -= deltaMs;
+      if (data.nextSpawnDelayMs <= 0) {
+        data.ladderLane = Math.floor(Math.random() * 3);
+        data.ladderProgress = 0;
+        data.ladderActive = true;
+        setQuestGameStatus("Ladder incoming. Hold the wall and shove it off before it lands.");
+      }
+      return;
+    }
+
+    if (input.left) {
+      data.wallLane = Math.max(0, data.wallLane - 1);
+    }
+    if (input.right) {
+      data.wallLane = Math.min(2, data.wallLane + 1);
+    }
+
+    data.ladderProgress += config.ladderSpeed * deltaMs;
+
+    if ((input.jump || questGameState.keys.has("Enter")) && !data.pushLock) {
+      data.pushLock = true;
+      if (data.wallLane === data.ladderLane && data.ladderProgress >= 0.62 && data.ladderProgress <= 0.96) {
+        data.ladderActive = false;
+        data.laddersStopped += 1;
+        data.nextSpawnDelayMs = 540;
+        data.ladderProgress = 0;
+        setQuestGameStatus(`Ladder kicked clear. ${data.laddersStopped} / ${config.targetLadders} knocked off.`);
+        if (data.laddersStopped >= config.targetLadders) {
+          finishQuestGame(config.successText, "Play Again");
+        }
+        return;
+      }
+      setQuestGameStatus("Bad shove timing. Reset and brace for the landing.");
+    }
+
+    if (!input.jump && !questGameState.keys.has("Enter")) {
+      data.pushLock = false;
+    }
+
+    if (data.ladderProgress >= 1) {
+      data.ladderProgress = 1;
+      startHelmsTriviaPhase(data);
+    }
+    return;
+  }
+}
+
 const PLAYABLE_QUEST_CONFIGS = {
   "Flight to the Ford": {
     controlsText: "Move with W A S D or the arrow keys.",
@@ -704,50 +1120,99 @@ const PLAYABLE_QUEST_CONFIGS = {
     },
   },
   "Helm's Deep Stand": {
-    controlsText: "Move with A / D or the arrow keys.",
-    objectiveText: "Hold the wall and avoid the Uruk firebomb barrage through the storm.",
+    controlsText: "Move lane with A / D or the arrow keys. Press W, Space, or Enter to shove a ladder.",
+    objectiveText: "First-person wall defense. Knock off 10 ladders before they land. If one lands, answer LOTR trivia correctly to strike down 5 attackers.",
     introText: "Press start to take the wall.",
-    runningText: "Rain on stone. Fire in the sky. Hold your line.",
-    successText: "Dawn breaks over Helm's Deep. The wall still stands.",
-    failureText: "A firebomb hit the wall walk. Take your place again.",
-    durationMs: 18000,
-    movement: "free",
-    playerSpeed: 0.21,
-    minX: 22,
-    maxX: QUEST_GAME_CANVAS_WIDTH - 46,
-    spawnMinMs: 300,
-    spawnMaxMs: 520,
+    runningText: "Uruk-hai are raising ladders. Hold the parapet.",
+    successText: "Ten ladders fall. The wall still stands under your watch.",
+    failureText: "The wall is overrun. Take the parapet again.",
+    durationMs: 99999,
+    targetLadders: 10,
+    ladderSpeed: 0.00022,
     setup() {
-      questGameState.player = { x: 300, y: 278, width: 24, height: 24 };
-      questGameState.spawnTimerMs = 280;
+      questGameState.questData = {
+        mode: "defense",
+        wallLane: 1,
+        ladderLane: 1,
+        ladderProgress: 0,
+        ladderActive: false,
+        laddersStopped: 0,
+        nextSpawnDelayMs: 700,
+        pushLock: false,
+        strikesRemaining: 0,
+        activeQuestion: null,
+      };
+      setQuestTriviaState(false);
     },
-    spawnHazard() {
-      questGameState.hazards.push({
-        x: randomBetween(40, 590),
-        y: -30,
-        width: 18,
-        height: 24,
-        vx: randomBetween(-0.01, 0.01),
-        vy: randomBetween(0.18, 0.3),
-      });
-    },
-    keepHazard(hazard) {
-      return hazard.y < QUEST_GAME_CANVAS_HEIGHT + 24;
+    update(deltaMs) {
+      updateHelmsDeep(deltaMs, this);
     },
     draw(ctx) {
-      drawPixelRect(ctx, 0, 0, QUEST_GAME_CANVAS_WIDTH, QUEST_GAME_CANVAS_HEIGHT, "#10131c");
-      drawPixelRect(ctx, 0, 0, QUEST_GAME_CANVAS_WIDTH, 118, "#1f2433");
-      drawPixelRect(ctx, 0, 118, QUEST_GAME_CANVAS_WIDTH, 150, "#465160");
-      drawPixelRect(ctx, 0, 268, QUEST_GAME_CANVAS_WIDTH, 92, "#716e69");
-      for (let i = 0; i < 18; i += 1) {
-        drawPixelRect(ctx, 20 + i * 34, 230, 18, 38, "#938b7f");
+      const data = questGameState.questData;
+      const laneCenters = [146, 320, 494];
+      const ladderX = laneCenters[data.ladderLane ?? 1];
+      const defendX = laneCenters[data.wallLane ?? 1];
+      const ladderHeight = 90 + Math.round((data.ladderProgress || 0) * 178);
+      const ladderTop = 326 - ladderHeight;
+
+      drawPixelRect(ctx, 0, 0, QUEST_GAME_CANVAS_WIDTH, QUEST_GAME_CANVAS_HEIGHT, "#121622");
+      drawPixelRect(ctx, 0, 0, QUEST_GAME_CANVAS_WIDTH, 142, "#252c3d");
+      drawPixelRect(ctx, 0, 142, QUEST_GAME_CANVAS_WIDTH, 116, "#42556b");
+      drawPixelRect(ctx, 0, 258, QUEST_GAME_CANVAS_WIDTH, 102, "#6d655d");
+      drawPixelRect(ctx, 0, 326, QUEST_GAME_CANVAS_WIDTH, 34, "#8d8174");
+
+      for (let i = 0; i < QUEST_GAME_CANVAS_WIDTH; i += 34) {
+        drawPixelRect(ctx, i, 0, 2, 22, "rgba(190,210,255,0.55)");
+        drawPixelRect(ctx, (i * 3) % QUEST_GAME_CANVAS_WIDTH, 86 + (i % 3) * 54, 2, 18, "rgba(190,210,255,0.45)");
       }
-      for (let i = 0; i < QUEST_GAME_CANVAS_WIDTH; i += 32) {
-        drawPixelRect(ctx, i, (i * 3) % QUEST_GAME_CANVAS_HEIGHT, 2, 18, "rgba(180,205,255,0.6)");
+
+      drawPixelRect(ctx, 0, 228, QUEST_GAME_CANVAS_WIDTH, 18, "#b2a69a");
+      for (let i = 0; i < 13; i += 1) {
+        drawPixelRect(ctx, 16 + i * 48, 236, 28, 90, "#9b8f84");
       }
-      drawHero(ctx, questGameState.player, { skin: "#f2dfbf", hair: "#49331f", tunic: "#7a7d85", accent: "#c7d7e8" });
-      questGameState.hazards.forEach((hazard) => drawHazardBlock(ctx, hazard, { outer: "#4a140a", inner: "#f06a26", glow: "#ffd36f" }));
-      drawProgressBar(ctx, this.durationMs, "DEEP", "#8ab0db");
+      for (let i = 0; i < 10; i += 1) {
+        drawPixelRect(ctx, 26 + i * 62, 204, 34, 24, "#c7bbb0");
+      }
+
+      if (data.ladderActive) {
+        drawPixelRect(ctx, ladderX - 20, ladderTop, 6, ladderHeight, "#6d4b2a");
+        drawPixelRect(ctx, ladderX + 14, ladderTop, 6, ladderHeight, "#6d4b2a");
+        for (let rung = 0; rung < 8; rung += 1) {
+          const y = ladderTop + 16 + rung * 22;
+          if (y < 322) {
+            drawPixelRect(ctx, ladderX - 18, y, 36, 4, "#b88a4c");
+          }
+        }
+        for (let i = 0; i < 5; i += 1) {
+          drawPixelRect(ctx, ladderX - 12 + i * 10, Math.max(ladderTop - 12, 190) + (i % 2) * 12, 8, 14, "#3c2a1e");
+        }
+      }
+
+      drawPixelRect(ctx, defendX - 18, 214, 36, 14, "#d8cdbf");
+      drawPixelRect(ctx, defendX - 16, 228, 32, 42, "#738093");
+      drawPixelRect(ctx, defendX - 14, 270, 10, 34, "#51453a");
+      drawPixelRect(ctx, defendX + 4, 270, 10, 34, "#51453a");
+      drawPixelRect(ctx, defendX - 6, 228, 12, 12, "#f2dfbf");
+      drawPixelRect(ctx, defendX + 18, 236, 28, 6, "#d8cdbf");
+      drawPixelRect(ctx, defendX + 40, 232, 8, 38, "#7c5a34");
+
+      if (data.mode === "trivia") {
+        for (let i = 0; i < 5; i += 1) {
+          const orcX = 116 + i * 82;
+          drawPixelRect(ctx, orcX, 248 + (i % 2) * 10, 18, 18, "#5a5f47");
+          drawPixelRect(ctx, orcX - 2, 266 + (i % 2) * 10, 22, 20, "#9d8ca7");
+          drawPixelRect(ctx, orcX + 2, 286 + (i % 2) * 10, 6, 16, "#433225");
+          drawPixelRect(ctx, orcX + 10, 286 + (i % 2) * 10, 6, 16, "#433225");
+          drawPixelRect(ctx, orcX + 4, 254 + (i % 2) * 10, 3, 3, "#ffd36d");
+          drawPixelRect(ctx, orcX + 11, 254 + (i % 2) * 10, 3, 3, "#ffd36d");
+        }
+      }
+
+      drawPixelText(ctx, `Ladders pushed: ${data.laddersStopped} / ${this.targetLadders}`, 20, 52, "#f0c75e");
+      drawPixelText(ctx, `Lane: ${data.wallLane + 1}`, 20, 74, "#f7e7bf");
+      if (data.mode === "trivia") {
+        drawPixelText(ctx, `Enemies left: ${data.strikesRemaining}`, 20, 96, "#ffd36d");
+      }
     },
   },
   "Shelob's Lair": {
@@ -948,6 +1413,7 @@ function openQuestGame(questKey, triggerElement) {
   elements.questGameObjective.textContent = config.objectiveText;
   elements.startQuestGameButton.textContent = "Start Quest";
   elements.startQuestGameButton.disabled = false;
+  setQuestTriviaState(false);
   resetQuestGameModel();
   config.setup();
   drawQuestGameFrame();
@@ -981,6 +1447,11 @@ function startQuestGame() {
 
 export function bindModalClose() {
   document.addEventListener("keydown", (event) => {
+    if (elements.endingModal.classList.contains("is-open") && event.key === "Escape") {
+      closeEndingModal();
+      return;
+    }
+
     if (elements.questGameModal.classList.contains("is-open")) {
       if (event.key === "Escape") {
         closeQuestGame();
@@ -1037,11 +1508,25 @@ export function bindModalClose() {
       closeQuestGame();
     }
   });
+
+  elements.endingModal.addEventListener("click", (event) => {
+    if (event.target.hasAttribute("data-close-ending")) {
+      closeEndingModal();
+    }
+  });
 }
 
 export function bindUi(db) {
   const isAdmin = new URLSearchParams(window.location.search).get("admin") === "true";
   elements.resetButton.hidden = !isAdmin;
+  updateDevModeButton();
+
+  elements.devModeButton.addEventListener("click", () => {
+    setDevMode(!state.devMode);
+    updateDevModeButton();
+    render();
+    syncEndingSequence();
+  });
 
   elements.addRunnerButton.addEventListener("click", () => {
     runnerModalMode = "create";
@@ -1165,6 +1650,24 @@ export function bindUi(db) {
 
   elements.startQuestGameButton.addEventListener("click", () => {
     startQuestGame();
+  });
+
+  elements.questTriviaOptions.addEventListener("click", (event) => {
+    const optionButton = event.target.closest("[data-trivia-option]");
+    if (!optionButton) return;
+    resolveHelmsTriviaAnswer(optionButton.dataset.triviaOption);
+  });
+
+  elements.closeEndingButton.addEventListener("click", () => {
+    closeEndingModal();
+  });
+
+  elements.closeEndingIconButton.addEventListener("click", () => {
+    closeEndingModal();
+  });
+
+  elements.playEndingButton.addEventListener("click", () => {
+    playEndingVideo(true);
   });
 
   elements.runnerGrid.addEventListener("submit", async (event) => {

@@ -3,9 +3,11 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase
 import { FIREBASE_CONFIG } from "./firebase-config.js";
 import { render } from "./js/render.js";
 import { subscribeToQuest, ensureDefaultRunners } from "./js/firebase.js";
-import { populateCharacterOptions, bindUi, setSyncState, hasFirebaseConfig } from "./js/ui.js";
+import { populateCharacterOptions, bindUi, setSyncState, hasFirebaseConfig, syncEndingSequence } from "./js/ui.js";
+import { loadDevMode } from "./js/state.js";
 
 async function init() {
+  loadDevMode();
   populateCharacterOptions();
   render();
 
@@ -19,7 +21,14 @@ async function init() {
   const db = getFirestore(app);
 
   bindUi(db);
-  subscribeToQuest(db, { onUpdate: render, onSyncState: setSyncState });
+  syncEndingSequence();
+  subscribeToQuest(db, {
+    onUpdate: () => {
+      render();
+      syncEndingSequence();
+    },
+    onSyncState: setSyncState,
+  });
 
   try {
     await ensureDefaultRunners(db);

@@ -56,9 +56,34 @@ textarea {
 }
 
 .app-shell {
+  position: relative;
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 28px 0 48px;
+  padding: 28px 0 84px;
+}
+
+.dev-mode-button {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 10;
+  min-width: 148px;
+  padding: 10px 12px;
+  border: 3px solid #1f120b;
+  background: linear-gradient(180deg, #3d281a 0%, #22140c 100%);
+  color: var(--cream);
+  box-shadow: 0 0 0 3px #6b492c;
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.58rem;
+  line-height: 1.6;
+}
+
+.dev-mode-button.is-active {
+  background: linear-gradient(180deg, #7a2a1d 0%, #4d170f 100%);
+  color: #ffe3a6;
+  box-shadow:
+    0 0 0 3px #8a5632,
+    0 0 16px rgba(239, 106, 56, 0.35);
 }
 
 .hero-panel,
@@ -1033,6 +1058,23 @@ button:disabled {
   box-shadow: var(--shadow);
 }
 
+.modal-icon-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 3px solid #1f120b;
+  background: #f2dfb4;
+  color: var(--ink);
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
 
 .modal-actions {
   display: flex;
@@ -1253,8 +1295,23 @@ button:disabled {
   color: #6a5a40;
 }
 
+.mission-card.dev-visible {
+  opacity: 0.88;
+  border-color: #7a4a1a;
+}
+
+.mission-card.dev-visible .mission-body {
+  color: #c7b285;
+}
+
+.mission-card.dev-visible .mission-icon {
+  opacity: 0.9;
+}
+
 .quest-game-card {
   width: min(940px, 100%);
+  max-height: min(92vh, 900px);
+  overflow-y: auto;
 }
 
 .quest-game-shell {
@@ -1284,6 +1341,91 @@ button:disabled {
   padding: 12px;
   border: 2px solid #4a3018;
   background: rgba(28, 17, 10, 0.9);
+}
+
+.quest-trivia-options {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.quest-trivia-option {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 2px solid #6b492c;
+  background: #3a2417;
+  color: var(--cream);
+}
+
+.quest-trivia-option:hover,
+.quest-trivia-option:focus-visible {
+  background: #5a3117;
+  outline: none;
+}
+
+.ending-card {
+  width: min(980px, 100%);
+  max-height: min(92vh, 900px);
+  overflow-y: auto;
+  padding-top: 56px;
+}
+
+.ending-player {
+  margin-top: 18px;
+  border: 3px solid #3a2510;
+  background: linear-gradient(180deg, #20130d 0%, #120b08 100%);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.45);
+}
+
+#endingCanvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-bottom: 3px solid #3a2510;
+  background: #120b08;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.ending-controls {
+  padding: 14px 16px 16px;
+}
+
+.ending-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.ending-chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 2px solid #6b492c;
+  background: #3a2417;
+  color: #f0c75e;
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.52rem;
+  line-height: 1.6;
+}
+
+.ending-progress {
+  margin-top: 12px;
+  height: 12px;
+  border: 2px solid #3a2510;
+  background: #24150d;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.35);
+}
+
+.ending-progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #ef6a38 0%, #f0c75e 100%);
+}
+
+.ending-actions {
+  margin-top: 14px;
 }
 
 .quest-game-label {
@@ -1347,8 +1489,38 @@ button:disabled {
     padding: 0 8px 12px 28px;
   }
 
+  .dev-mode-button {
+    left: 0;
+    bottom: 0;
+    min-width: 132px;
+    padding: 8px 10px;
+    font-size: 0.52rem;
+  }
+
   .quest-game-shell {
     grid-template-columns: 1fr;
+  }
+
+  .quest-game-card {
+    max-height: 94vh;
+  }
+
+  .ending-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ending-card {
+    max-height: 94vh;
+    padding-top: 52px;
+  }
+
+  .modal-icon-close {
+    top: 10px;
+    right: 10px;
+    width: 38px;
+    height: 38px;
+    font-size: 0.65rem;
   }
 
   button {
