@@ -3,6 +3,7 @@ import { combinedMiles, runnerById, setDevMode, state, totalGoalMiles } from "./
 import { todayIsoDate } from "./utils.js";
 import { addRunner, updateRunner, addRun, deleteRun, resetQuest } from "./firebase.js";
 import { render } from "./render.js";
+import { createHelmsDeepGame } from "./three-games.js";
 
 const elements = {
   setupPanel: document.getElementById("setupPanel"),
@@ -35,6 +36,7 @@ const elements = {
   questTriviaPanel: document.getElementById("questTriviaPanel"),
   questTriviaPrompt: document.getElementById("questTriviaPrompt"),
   questTriviaOptions: document.getElementById("questTriviaOptions"),
+  questGameThreeHost: document.getElementById("questGameThreeHost"),
   questGameCanvas: document.getElementById("questGameCanvas"),
   startQuestGameButton: document.getElementById("startQuestGameButton"),
   closeQuestGameButton: document.getElementById("closeQuestGameButton"),
@@ -123,6 +125,7 @@ let endingVideoState = {
   frameMs: 0,
   shownForGoalKey: null,
 };
+let helmsDeepSession = null;
 
 export function setSyncState(_message, _status) {
   // sync banner removed from UI
@@ -188,6 +191,19 @@ function setQuestTriviaState(visible, prompt = "", options = []) {
     button.dataset.triviaOption = option;
     elements.questTriviaOptions.appendChild(button);
   });
+}
+
+function setQuestRenderMode(mode) {
+  const useThree = mode === "three";
+  elements.questGameThreeHost.hidden = !useThree;
+  elements.questGameCanvas.hidden = useThree;
+}
+
+function destroyExternalQuestSession() {
+  if (helmsDeepSession) {
+    helmsDeepSession.destroy();
+    helmsDeepSession = null;
+  }
 }
 
 function stopQuestGameLoop() {
@@ -831,13 +847,12 @@ function resolveHelmsTriviaAnswer(selectedOption) {
   if (selectedOption === data.activeQuestion.answer) {
     data.strikesRemaining -= 1;
     if (data.strikesRemaining <= 0) {
-      data.ladderActive = false;
       data.mode = "defense";
       data.laddersStopped += 1;
       data.activeQuestion = null;
       setQuestTriviaState(false);
       setQuestGameStatus(`You cleared the wall. ${data.laddersStopped} / ${config.targetLadders} ladders pushed off.`);
-      data.nextSpawnDelayMs = 700;
+      helmsDeepSession?.clearLadderAfterTrivia();
       if (data.laddersStopped >= config.targetLadders) {
         finishQuestGame(config.successText, "Play Again");
       }
@@ -1120,6 +1135,7 @@ const PLAYABLE_QUEST_CONFIGS = {
     },
   },
   "Helm's Deep Stand": {
+    engine: "three",
     controlsText: "Move lane with A / D or the arrow keys. Press W, Space, or Enter to shove a ladder.",
     objectiveText: "First-person wall defense. Knock off 10 ladders before they land. If one lands, answer LOTR trivia correctly to strike down 5 attackers.",
     introText: "Press start to take the wall.",
@@ -1128,91 +1144,15 @@ const PLAYABLE_QUEST_CONFIGS = {
     failureText: "The wall is overrun. Take the parapet again.",
     durationMs: 99999,
     targetLadders: 10,
-    ladderSpeed: 0.00022,
     setup() {
       questGameState.questData = {
         mode: "defense",
         wallLane: 1,
-        ladderLane: 1,
-        ladderProgress: 0,
-        ladderActive: false,
         laddersStopped: 0,
-        nextSpawnDelayMs: 700,
-        pushLock: false,
         strikesRemaining: 0,
         activeQuestion: null,
       };
       setQuestTriviaState(false);
-    },
-    update(deltaMs) {
-      updateHelmsDeep(deltaMs, this);
-    },
-    draw(ctx) {
-      const data = questGameState.questData;
-      const laneCenters = [146, 320, 494];
-      const ladderX = laneCenters[data.ladderLane ?? 1];
-      const defendX = laneCenters[data.wallLane ?? 1];
-      const ladderHeight = 90 + Math.round((data.ladderProgress || 0) * 178);
-      const ladderTop = 326 - ladderHeight;
-
-      drawPixelRect(ctx, 0, 0, QUEST_GAME_CANVAS_WIDTH, QUEST_GAME_CANVAS_HEIGHT, "#121622");
-      drawPixelRect(ctx, 0, 0, QUEST_GAME_CANVAS_WIDTH, 142, "#252c3d");
-      drawPixelRect(ctx, 0, 142, QUEST_GAME_CANVAS_WIDTH, 116, "#42556b");
-      drawPixelRect(ctx, 0, 258, QUEST_GAME_CANVAS_WIDTH, 102, "#6d655d");
-      drawPixelRect(ctx, 0, 326, QUEST_GAME_CANVAS_WIDTH, 34, "#8d8174");
-
-      for (let i = 0; i < QUEST_GAME_CANVAS_WIDTH; i += 34) {
-        drawPixelRect(ctx, i, 0, 2, 22, "rgba(190,210,255,0.55)");
-        drawPixelRect(ctx, (i * 3) % QUEST_GAME_CANVAS_WIDTH, 86 + (i % 3) * 54, 2, 18, "rgba(190,210,255,0.45)");
-      }
-
-      drawPixelRect(ctx, 0, 228, QUEST_GAME_CANVAS_WIDTH, 18, "#b2a69a");
-      for (let i = 0; i < 13; i += 1) {
-        drawPixelRect(ctx, 16 + i * 48, 236, 28, 90, "#9b8f84");
-      }
-      for (let i = 0; i < 10; i += 1) {
-        drawPixelRect(ctx, 26 + i * 62, 204, 34, 24, "#c7bbb0");
-      }
-
-      if (data.ladderActive) {
-        drawPixelRect(ctx, ladderX - 20, ladderTop, 6, ladderHeight, "#6d4b2a");
-        drawPixelRect(ctx, ladderX + 14, ladderTop, 6, ladderHeight, "#6d4b2a");
-        for (let rung = 0; rung < 8; rung += 1) {
-          const y = ladderTop + 16 + rung * 22;
-          if (y < 322) {
-            drawPixelRect(ctx, ladderX - 18, y, 36, 4, "#b88a4c");
-          }
-        }
-        for (let i = 0; i < 5; i += 1) {
-          drawPixelRect(ctx, ladderX - 12 + i * 10, Math.max(ladderTop - 12, 190) + (i % 2) * 12, 8, 14, "#3c2a1e");
-        }
-      }
-
-      drawPixelRect(ctx, defendX - 18, 214, 36, 14, "#d8cdbf");
-      drawPixelRect(ctx, defendX - 16, 228, 32, 42, "#738093");
-      drawPixelRect(ctx, defendX - 14, 270, 10, 34, "#51453a");
-      drawPixelRect(ctx, defendX + 4, 270, 10, 34, "#51453a");
-      drawPixelRect(ctx, defendX - 6, 228, 12, 12, "#f2dfbf");
-      drawPixelRect(ctx, defendX + 18, 236, 28, 6, "#d8cdbf");
-      drawPixelRect(ctx, defendX + 40, 232, 8, 38, "#7c5a34");
-
-      if (data.mode === "trivia") {
-        for (let i = 0; i < 5; i += 1) {
-          const orcX = 116 + i * 82;
-          drawPixelRect(ctx, orcX, 248 + (i % 2) * 10, 18, 18, "#5a5f47");
-          drawPixelRect(ctx, orcX - 2, 266 + (i % 2) * 10, 22, 20, "#9d8ca7");
-          drawPixelRect(ctx, orcX + 2, 286 + (i % 2) * 10, 6, 16, "#433225");
-          drawPixelRect(ctx, orcX + 10, 286 + (i % 2) * 10, 6, 16, "#433225");
-          drawPixelRect(ctx, orcX + 4, 254 + (i % 2) * 10, 3, 3, "#ffd36d");
-          drawPixelRect(ctx, orcX + 11, 254 + (i % 2) * 10, 3, 3, "#ffd36d");
-        }
-      }
-
-      drawPixelText(ctx, `Ladders pushed: ${data.laddersStopped} / ${this.targetLadders}`, 20, 52, "#f0c75e");
-      drawPixelText(ctx, `Lane: ${data.wallLane + 1}`, 20, 74, "#f7e7bf");
-      if (data.mode === "trivia") {
-        drawPixelText(ctx, `Enemies left: ${data.strikesRemaining}`, 20, 96, "#ffd36d");
-      }
     },
   },
   "Shelob's Lair": {
@@ -1366,6 +1306,7 @@ const PLAYABLE_QUEST_CONFIGS = {
 };
 
 function drawQuestGameFrame() {
+  if (activeQuestConfig()?.engine === "three") return;
   const ctx = questCanvasContext();
   const config = activeQuestConfig();
   if (!ctx || !config) return;
@@ -1414,15 +1355,22 @@ function openQuestGame(questKey, triggerElement) {
   elements.startQuestGameButton.textContent = "Start Quest";
   elements.startQuestGameButton.disabled = false;
   setQuestTriviaState(false);
+  setQuestRenderMode(config.engine === "three" ? "three" : "canvas");
+  destroyExternalQuestSession();
   resetQuestGameModel();
   config.setup();
-  drawQuestGameFrame();
+  if (config.engine !== "three") {
+    drawQuestGameFrame();
+  } else {
+    elements.questGameThreeHost.innerHTML = "";
+  }
   setQuestGameStatus(config.introText);
   openModal(elements.questGameModal, elements.startQuestGameButton);
 }
 
 function closeQuestGame() {
   stopQuestGameLoop();
+  destroyExternalQuestSession();
   questGameState.keys.clear();
   questGameState.activeQuestKey = null;
   const trigger = questGameState.activeQuest || null;
@@ -1433,6 +1381,38 @@ function closeQuestGame() {
 function startQuestGame() {
   const config = activeQuestConfig();
   if (!config) return;
+
+  if (config.engine === "three") {
+    destroyExternalQuestSession();
+    setQuestTriviaState(false);
+    setQuestGameStatus(config.runningText);
+    elements.startQuestGameButton.disabled = true;
+    elements.startQuestGameButton.textContent = "Quest Running";
+    helmsDeepSession = createHelmsDeepGame(elements.questGameThreeHost, {
+      onStatus: (message) => setQuestGameStatus(message),
+      onProgress: (count) => {
+        questGameState.questData.laddersStopped = count;
+      },
+      onLadderLanded: () => {
+        questGameState.questData.mode = "trivia";
+        questGameState.questData.strikesRemaining = 5;
+        questGameState.questData.activeQuestion = pickHelmsTriviaQuestion();
+        setQuestTriviaState(
+          true,
+          questGameState.questData.activeQuestion.prompt,
+          questGameState.questData.activeQuestion.options,
+        );
+      },
+      onComplete: (message) => {
+        setQuestGameStatus(message);
+        setQuestTriviaState(false);
+        elements.startQuestGameButton.disabled = false;
+        elements.startQuestGameButton.textContent = "Replay Quest";
+      },
+    });
+    helmsDeepSession.start();
+    return;
+  }
 
   resetQuestGameModel();
   config.setup();

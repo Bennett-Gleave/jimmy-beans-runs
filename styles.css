@@ -1331,6 +1331,20 @@ button:disabled {
   image-rendering: crisp-edges;
 }
 
+.quest-game-viewport {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 4px solid #3a2510;
+  background: #140b08;
+  overflow: hidden;
+}
+
+.quest-game-viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .quest-game-sidebar {
   display: grid;
   gap: 12px;
