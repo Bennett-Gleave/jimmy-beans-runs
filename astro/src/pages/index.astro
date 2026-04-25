@@ -1,22 +1,5 @@
 ---
-const chapters = [
-  {
-    href: "/chapter-1",
-    eyebrow: "Chapter 1",
-    title: "Destroy the Ring Together",
-    blurb:
-      "Build the fellowship and run the road to Mount Doom. The original April quest, ported to the new chapter schema.",
-    status: "active",
-  },
-  {
-    href: "/chapter-2",
-    eyebrow: "Chapter 2",
-    title: "A Galaxy Far, Far Away",
-    blurb:
-      "Star Wars-themed quest. DB is wired up; UI/theme is being built out.",
-    status: "stub",
-  },
-];
+const title = "Jimmy-Bean Runs";
 ---
 
 <!doctype html>
@@ -24,7 +7,7 @@ const chapters = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jimmy-Bean Runs</title>
+    <title>{title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -34,60 +17,165 @@ const chapters = [
     <style>
       :root {
         color-scheme: dark;
-        --bg: #0c0a07;
-        --panel: #161310;
-        --border: #3a2c1a;
+        --bg-1: #0c0a07;
+        --bg-2: #1a120a;
         --text: #f4ead3;
         --muted: #b9a888;
         --accent: #f6c453;
       }
-      html, body { background: var(--bg); color: var(--text); margin: 0; }
-      body { font-family: "VT323", monospace; font-size: 22px; line-height: 1.45; min-height: 100vh; }
-      main { max-width: 920px; margin: 0 auto; padding: 64px 24px; }
-      h1 { font-family: "Press Start 2P", monospace; font-size: 28px; line-height: 1.4; margin: 0 0 16px; }
-      .eyebrow { font-family: "Press Start 2P", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
-      .lede { color: var(--muted); margin: 0 0 48px; max-width: 60ch; }
-      .chapter-grid { display: grid; gap: 20px; }
-      .chapter-card {
-        display: block;
-        padding: 24px;
-        border: 2px solid var(--border);
-        background: var(--panel);
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; height: 100%; }
+      body {
+        background: radial-gradient(ellipse at center, var(--bg-2) 0%, var(--bg-1) 70%);
         color: var(--text);
-        text-decoration: none;
-        transition: transform 120ms ease, border-color 120ms ease;
+        font-family: "VT323", monospace;
+        font-size: 20px;
+        line-height: 1.45;
+        overflow: hidden;
       }
-      .chapter-card:hover { transform: translateY(-2px); border-color: var(--accent); }
-      .chapter-card h2 { font-family: "Press Start 2P", monospace; font-size: 16px; margin: 4px 0 12px; }
-      .chapter-card p { color: var(--muted); margin: 0; }
-      .status { float: right; font-family: "Press Start 2P", monospace; font-size: 9px; letter-spacing: 0.16em; padding: 4px 8px; border: 1px solid var(--border); color: var(--accent); }
-      footer { color: var(--muted); margin-top: 48px; font-size: 18px; }
+
+      .landing {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        height: 100vh;
+        padding: 24px;
+      }
+
+      .landing-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+      .brand {
+        font-family: "Press Start 2P", monospace;
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        color: var(--accent);
+      }
+      .nav-links a {
+        color: var(--muted);
+        text-decoration: none;
+        margin-left: 16px;
+        font-size: 16px;
+      }
+      .nav-links a:hover { color: var(--accent); }
+
+      #bookStage {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 420px;
+        overflow: hidden;
+      }
+      #bookStage canvas {
+        position: absolute;
+        inset: 0;
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+        z-index: 0;
+      }
+
+      .stage-controls {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px;
+        z-index: 2;
+      }
+      .nav-arrow {
+        pointer-events: auto;
+        background: rgba(20, 12, 6, 0.6);
+        border: 1px solid #5b3e1f;
+        color: var(--text);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        font-size: 22px;
+        cursor: pointer;
+        transition: transform 120ms ease, border-color 120ms ease, opacity 120ms ease;
+      }
+      .nav-arrow:hover:not(:disabled) {
+        transform: translateY(-1px);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .nav-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
+
+      .landing-footer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+      }
+
+      #pageDots {
+        display: flex;
+        gap: 8px;
+      }
+      .page-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(246, 196, 83, 0.18);
+        border: 1px solid rgba(246, 196, 83, 0.35);
+        cursor: pointer;
+        padding: 0;
+        transition: transform 120ms ease, background 120ms ease;
+      }
+      .page-dot:hover { background: rgba(246, 196, 83, 0.4); }
+      .page-dot.is-active {
+        background: var(--accent);
+        transform: scale(1.2);
+      }
+
+      #openChapter {
+        font-family: "Press Start 2P", monospace;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        padding: 12px 22px;
+        background: var(--accent);
+        color: #1a120a;
+        border: 0;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: filter 120ms ease;
+      }
+      #openChapter:hover:not(:disabled) { filter: brightness(1.1); }
+      #openChapter:disabled { opacity: 0.4; cursor: not-allowed; }
+
+      .hint { color: var(--muted); font-size: 14px; margin: 0; }
     </style>
   </head>
   <body>
-    <main>
-      <p class="eyebrow">Jimmy-Bean Runs</p>
-      <h1>Pick a chapter</h1>
-      <p class="lede">
-        Each chapter is a self-contained quest. Pick one to log miles, claim a
-        character, and watch the fellowship close in on the goal.
-      </p>
+    <div class="landing">
+      <header class="landing-header">
+        <div class="brand">Jimmy-Bean Runs</div>
+        <nav class="nav-links">
+          <a id="adminLink" href="/admin" hidden>Admin</a>
+        </nav>
+      </header>
 
-      <div class="chapter-grid">
-        {chapters.map((chapter) => (
-          <a class="chapter-card" href={chapter.href}>
-            <span class="status">{chapter.status}</span>
-            <p class="eyebrow">{chapter.eyebrow}</p>
-            <h2>{chapter.title}</h2>
-            <p>{chapter.blurb}</p>
-          </a>
-        ))}
+      <div id="bookStage">
+        <div class="stage-controls">
+          <button id="prevPage" class="nav-arrow" aria-label="Previous chapter" disabled>‹</button>
+          <button id="nextPage" class="nav-arrow" aria-label="Next chapter" disabled>›</button>
+        </div>
       </div>
 
-      <footer>
-        More chapters coming as the quest expands. ·
-        <a href="/admin">Admin</a>
+      <footer class="landing-footer">
+        <div id="pageDots"></div>
+        <button id="openChapter" disabled>Open chapter</button>
+        <p class="hint">Use ← → to flip pages · Enter to open</p>
       </footer>
-    </main>
+    </div>
+
+    <script>
+      import "../scripts/landing/main.js";
+    </script>
   </body>
 </html>
