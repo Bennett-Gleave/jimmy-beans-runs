@@ -1,0 +1,93 @@
+---
+const chapters = [
+  {
+    href: "/chapter-1",
+    eyebrow: "Chapter 1",
+    title: "Destroy the Ring Together",
+    blurb:
+      "Build the fellowship and run the road to Mount Doom. The original April quest, ported to the new chapter schema.",
+    status: "active",
+  },
+  {
+    href: "/chapter-2",
+    eyebrow: "Chapter 2",
+    title: "A Galaxy Far, Far Away",
+    blurb:
+      "Star Wars-themed quest. DB is wired up; UI/theme is being built out.",
+    status: "stub",
+  },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jimmy-Bean Runs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0c0a07;
+        --panel: #161310;
+        --border: #3a2c1a;
+        --text: #f4ead3;
+        --muted: #b9a888;
+        --accent: #f6c453;
+      }
+      html, body { background: var(--bg); color: var(--text); margin: 0; }
+      body { font-family: "VT323", monospace; font-size: 22px; line-height: 1.45; min-height: 100vh; }
+      main { max-width: 920px; margin: 0 auto; padding: 64px 24px; }
+      h1 { font-family: "Press Start 2P", monospace; font-size: 28px; line-height: 1.4; margin: 0 0 16px; }
+      .eyebrow { font-family: "Press Start 2P", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+      .lede { color: var(--muted); margin: 0 0 48px; max-width: 60ch; }
+      .chapter-grid { display: grid; gap: 20px; }
+      .chapter-card {
+        display: block;
+        padding: 24px;
+        border: 2px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        text-decoration: none;
+        transition: transform 120ms ease, border-color 120ms ease;
+      }
+      .chapter-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+      .chapter-card h2 { font-family: "Press Start 2P", monospace; font-size: 16px; margin: 4px 0 12px; }
+      .chapter-card p { color: var(--muted); margin: 0; }
+      .status { float: right; font-family: "Press Start 2P", monospace; font-size: 9px; letter-spacing: 0.16em; padding: 4px 8px; border: 1px solid var(--border); color: var(--accent); }
+      footer { color: var(--muted); margin-top: 48px; font-size: 18px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Jimmy-Bean Runs</p>
+      <h1>Pick a chapter</h1>
+      <p class="lede">
+        Each chapter is a self-contained quest. Pick one to log miles, claim a
+        character, and watch the fellowship close in on the goal.
+      </p>
+
+      <div class="chapter-grid">
+        {chapters.map((chapter) => (
+          <a class="chapter-card" href={chapter.href}>
+            <span class="status">{chapter.status}</span>
+            <p class="eyebrow">{chapter.eyebrow}</p>
+            <h2>{chapter.title}</h2>
+            <p>{chapter.blurb}</p>
+          </a>
+        ))}
+      </div>
+
+      <footer>
+        More chapters coming as the quest expands. ·
+        <a href="/admin">Admin</a>
+      </footer>
+    </main>
+  </body>
+</html>

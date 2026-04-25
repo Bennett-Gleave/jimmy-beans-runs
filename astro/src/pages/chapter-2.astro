@@ -1,0 +1,69 @@
+---
+import "../styles/chapter_2.css";
+const title = "Jimmy-Bean Runs · Chapter 2 (stub)";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main>
+      <a class="back-link" href="/">← All chapters</a>
+      <p class="eyebrow">Chapter 2 · Star Wars</p>
+      <h1>A galaxy far, far away (stub)</h1>
+      <p class="lede">
+        DB-wired stub for chapter 2. Reads/writes
+        <code>chapters/chapter-2/participants</code> and
+        <code>chapters/chapter-2/runs</code>. UI/theme to be filled in by the
+        coworker.
+      </p>
+
+      <div id="syncBanner" class="sync-banner" data-status="idle">Connecting…</div>
+
+      <dl class="totals">
+        <div>
+          <dt>Total miles</dt>
+          <dd><span id="totalMiles">0.0</span></dd>
+        </div>
+        <div>
+          <dt>Goal miles</dt>
+          <dd><span id="goalMiles">0.0</span></dd>
+        </div>
+        <div>
+          <dt>Participants</dt>
+          <dd><span id="runnerCount">0</span></dd>
+        </div>
+        <div>
+          <dt>Runs logged</dt>
+          <dd><span id="runCount">0</span></dd>
+        </div>
+      </dl>
+
+      <section id="runnerGrid" class="stub-grid"></section>
+
+      <section class="stub-todo">
+        <p class="stub-eyebrow">TODO (coworker)</p>
+        <ul>
+          <li>Replace <code>CHARACTER_OPTIONS</code> in <code>src/scripts/chapter_2/data.js</code> with the real Star Wars roster.</li>
+          <li>Fill in <code>SIDE_QUESTS</code> + <code>PLAYABLE_SIDE_QUESTS</code> for the chapter milestones.</li>
+          <li>Drop chapter assets in <code>public/chapter_2/assets/</code>.</li>
+          <li>Build the themed UI in this page (sections from chapter-1 are a useful reference).</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      import "../scripts/chapter_2/main.js";
+    </script>
+  </body>
+</html>

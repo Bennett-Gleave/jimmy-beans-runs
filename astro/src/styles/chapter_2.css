@@ -1,0 +1,144 @@
+/*
+ * Chapter 2 — Star Wars (stub).
+ * Coworker will replace this with a proper themed stylesheet.
+ */
+:root {
+  color-scheme: dark;
+  --bg: #05060a;
+  --panel: #0d0f15;
+  --border: #1d2230;
+  --text: #e8eaef;
+  --muted: #8b94a8;
+  --accent: #ffd84a;
+}
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "VT323", monospace;
+  font-size: 22px;
+  line-height: 1.45;
+  min-height: 100vh;
+}
+
+main {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 56px 24px;
+}
+
+a { color: var(--accent); }
+
+.eyebrow,
+.stub-eyebrow {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+
+h1 {
+  font-family: "Press Start 2P", monospace;
+  font-size: 24px;
+  margin: 0 0 12px;
+}
+
+h3 {
+  font-family: "Press Start 2P", monospace;
+  font-size: 13px;
+  margin: 6px 0;
+}
+
+.lede { color: var(--muted); margin: 0 0 32px; max-width: 60ch; }
+
+.totals {
+  display: flex;
+  gap: 32px;
+  border: 2px solid var(--border);
+  background: var(--panel);
+  padding: 20px 24px;
+  margin-bottom: 32px;
+}
+.totals dt {
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.totals dd {
+  margin: 0;
+  font-size: 28px;
+  font-family: "Press Start 2P", monospace;
+  color: var(--accent);
+}
+
+.sync-banner {
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  padding: 8px 12px;
+  border: 1px dashed var(--border);
+}
+.sync-banner[data-status="error"] { color: #ff7e7e; border-color: #ff7e7e; }
+.sync-banner[data-status="connected"] { color: #7eff9e; border-color: #2c4a35; }
+
+.stub-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.stub-card {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 2px solid var(--border);
+  background: var(--panel);
+}
+
+.stub-empty { grid-column: 1 / -1; flex-direction: column; align-items: flex-start; }
+
+.stub-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  background-color: #1c2030;
+  flex-shrink: 0;
+}
+
+.stub-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Press Start 2P", monospace;
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.stub-body { flex: 1; min-width: 0; }
+.stub-miles { color: var(--muted); margin: 4px 0 0; }
+
+.stub-todo {
+  margin-top: 32px;
+  padding: 20px;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  font-size: 18px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  font-size: 16px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.back-link:hover { color: var(--accent); }

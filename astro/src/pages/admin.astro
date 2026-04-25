@@ -1,0 +1,263 @@
+---
+import "../styles/admin.css";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Jimmy-Bean Runs</title>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <div class="admin-brand">Admin</div>
+
+        <nav class="nav-group">
+          <button class="tab-button" data-route="users">Users</button>
+        </nav>
+
+        <div class="nav-section-label">
+          <span>Chapters</span>
+          <button id="newChapterBtn" class="icon-button" title="New chapter">+</button>
+        </div>
+        <nav id="chaptersNav" class="nav-group"></nav>
+
+        <a href="/" class="back-link">← Back to site</a>
+      </aside>
+
+      <main class="admin-main">
+        <!-- Users view -->
+        <section id="view-users" class="view">
+          <header class="admin-header">
+            <div>
+              <h1>Users</h1>
+              <p><code>users/&#123;id&#125;</code> — global, shared across chapters.</p>
+            </div>
+            <button id="newUserBtn" class="primary">+ New user</button>
+          </header>
+          <div id="usersList" class="list"></div>
+        </section>
+
+        <!-- Chapter detail view -->
+        <section id="view-chapter" class="view" hidden>
+          <header class="admin-header">
+            <div>
+              <p class="muted" style="font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;" id="chapterCrumb">Chapter</p>
+              <h1 id="chapterTitle">—</h1>
+              <p id="chapterMeta" class="muted"></p>
+            </div>
+            <div class="row-actions">
+              <button id="editChapterBtn">Edit chapter</button>
+            </div>
+          </header>
+
+          <section class="detail-section">
+            <header class="section-header">
+              <h2>Participants</h2>
+              <button id="newParticipantBtn" class="primary">+ Add participant</button>
+            </header>
+            <div id="participantsList" class="list"></div>
+          </section>
+
+          <section class="detail-section">
+            <header class="section-header">
+              <h2>Characters</h2>
+              <button id="newCharacterBtn" class="primary">+ New character</button>
+            </header>
+            <div id="charactersList" class="list"></div>
+          </section>
+        </section>
+
+        <!-- Empty / default view -->
+        <section id="view-empty" class="view empty-view" hidden>
+          <p class="muted">Pick a chapter or Users from the sidebar.</p>
+        </section>
+      </main>
+    </div>
+
+    <!-- Chapter dialog -->
+    <dialog id="chapterDialog" class="modal">
+      <form id="chapterForm">
+        <div class="modal-body">
+          <h2 id="chapterDialogTitle">New chapter</h2>
+          <div id="chapterFormError" class="error" hidden></div>
+          <div class="form-grid">
+            <label class="field">
+              <span>ID (slug)</span>
+              <input name="id" required pattern="[a-z0-9-]+" />
+            </label>
+            <label class="field">
+              <span>Title</span>
+              <input name="title" required />
+            </label>
+            <label class="field">
+              <span>Theme key</span>
+              <input name="themeKey" />
+            </label>
+            <label class="field">
+              <span>Order</span>
+              <input name="order" type="number" value="0" />
+            </label>
+            <label class="field">
+              <span>Month (1-12)</span>
+              <input name="month" type="number" min="1" max="12" />
+            </label>
+            <label class="field">
+              <span>Year</span>
+              <input name="year" type="number" />
+            </label>
+            <label class="field">
+              <span>Start date</span>
+              <input name="startDate" type="date" />
+            </label>
+            <label class="field">
+              <span>End date</span>
+              <input name="endDate" type="date" />
+            </label>
+            <label class="field">
+              <span>Default goal miles</span>
+              <input name="defaultGoalMiles" type="number" min="1" value="30" />
+            </label>
+            <label class="field">
+              <span>Status</span>
+              <select name="status">
+                <option value="upcoming">upcoming</option>
+                <option value="active">active</option>
+                <option value="complete">complete</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" data-cancel>Cancel</button>
+          <button type="submit" class="primary">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- User dialog -->
+    <dialog id="userDialog" class="modal">
+      <form id="userForm">
+        <div class="modal-body">
+          <h2 id="userDialogTitle">New user</h2>
+          <div id="userFormError" class="error" hidden></div>
+          <div class="form-grid">
+            <label class="field">
+              <span>User ID</span>
+              <input name="id" required />
+            </label>
+            <label class="field">
+              <span>Display name</span>
+              <input name="displayName" required />
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" data-cancel>Cancel</button>
+          <button type="submit" class="primary">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Character dialog -->
+    <dialog id="characterDialog" class="modal">
+      <form id="characterForm">
+        <div class="modal-body">
+          <h2 id="characterDialogTitle">New character</h2>
+          <div id="characterFormError" class="error" hidden></div>
+          <div class="upload-row">
+            <div id="characterAvatar" class="avatar">img</div>
+            <div style="flex: 1;">
+              <label class="field">
+                <span>Image (upload)</span>
+                <input id="characterImageInput" type="file" accept="image/*" />
+              </label>
+              <input id="characterImageUrl" name="imageUrl" type="hidden" />
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top: 12px;">
+            <label class="field">
+              <span>Key (slug)</span>
+              <input name="key" required pattern="[a-z0-9-]+" />
+            </label>
+            <label class="field">
+              <span>Label</span>
+              <input name="label" required />
+            </label>
+            <label class="field" style="grid-column: 1 / -1;">
+              <span>Flavor</span>
+              <input name="flavor" />
+            </label>
+            <label class="field">
+              <span>Accent</span>
+              <select name="accent">
+                <option>warm</option>
+                <option>green</option>
+                <option>steel</option>
+                <option>bark</option>
+                <option>leaf</option>
+                <option>mist</option>
+                <option>sun</option>
+                <option>rose</option>
+                <option>ember</option>
+                <option>swamp</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" data-cancel>Cancel</button>
+          <button type="submit" class="primary">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Participant dialog -->
+    <dialog id="participantDialog" class="modal">
+      <form id="participantForm">
+        <div class="modal-body">
+          <h2 id="participantDialogTitle">Add participant</h2>
+          <div id="participantFormError" class="error" hidden></div>
+          <div class="upload-row">
+            <div id="participantAvatar" class="avatar">img</div>
+            <div style="flex: 1;">
+              <label class="field">
+                <span>Image (upload)</span>
+                <input id="participantImageInput" type="file" accept="image/*" />
+              </label>
+              <input id="participantImageUrl" name="imageUrl" type="hidden" />
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top: 12px;">
+            <label class="field">
+              <span>User</span>
+              <select id="participantUserSelect" name="userId" required></select>
+            </label>
+            <label class="field">
+              <span>Display name</span>
+              <input name="displayName" required />
+            </label>
+            <label class="field">
+              <span>Character</span>
+              <select id="participantCharacterSelect" name="characterKey" required></select>
+            </label>
+            <label class="field">
+              <span>Goal miles</span>
+              <input name="goalMiles" type="number" min="1" value="30" required />
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" data-cancel>Cancel</button>
+          <button type="submit" class="primary">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script>
+      import "../scripts/admin/main.js";
+    </script>
+  </body>
+</html>
