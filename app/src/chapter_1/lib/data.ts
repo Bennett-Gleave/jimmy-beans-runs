@@ -1,6 +1,6 @@
 import type { PlayableQuestMeta, SideQuest } from "./types";
 
-export const QUEST_ID = "april-quest";
+export const CHAPTER_ID = "chapter-1";
 export const DEFAULT_RUNNER_GOAL = 30;
 
 export const CHARACTER_OPTIONS = [
@@ -21,9 +21,9 @@ export const CHARACTER_OPTIONS = [
   { key: "balrog", label: "Balrog", flavor: "Hot pace, dramatic entrances, absolutely no chill.", accent: "ember" },
 ] as const;
 
-export const DEFAULT_RUNNERS = [
-  { id: "runner-sam", name: "Hipster Sam", characterKey: "sam", goalMiles: 30, createdAtMs: 1 },
-  { id: "runner-frodo", name: "Frodo Bean", characterKey: "frodo", goalMiles: 30, createdAtMs: 2 },
+export const DEFAULT_PARTICIPANTS = [
+  { userId: "user-hipster-sam", displayName: "Hipster Sam", characterKey: "sam", goalMiles: 30, createdAtMs: 1 },
+  { userId: "user-frodo-bean", displayName: "Frodo Bean", characterKey: "frodo", goalMiles: 30, createdAtMs: 2 },
 ] as const;
 
 export const CUSTOM_RUNNER_IMAGES: Record<string, string> = {

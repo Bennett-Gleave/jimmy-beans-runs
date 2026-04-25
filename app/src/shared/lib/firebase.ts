@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   getFirestore,
   onSnapshot,
@@ -12,7 +13,14 @@ import {
   type Firestore,
 } from "firebase/firestore";
 import { FIREBASE_CONFIG } from "./firebaseConfig";
-import type { Run, Runner, RunDoc, RunnerDoc, SyncState } from "./types";
+import type {
+  ChapterRunDoc,
+  ParticipantDoc,
+  Run,
+  Runner,
+  SyncState,
+  UserDoc,
+} from "./types";
 import { todayIsoDate } from "./utils";
 
 let app: FirebaseApp | null = null;
@@ -28,130 +36,180 @@ export function getDb(): Firestore {
   return db;
 }
 
-export type DefaultRunner = {
-  id: string;
-  name: string;
+export type DefaultParticipant = {
+  userId: string;
+  displayName: string;
   characterKey: string;
   goalMiles: number;
   createdAtMs: number;
 };
 
-export type QuestApiConfig = {
-  questId: string;
-  defaultRunners: readonly DefaultRunner[];
-  defaultRunnerGoal: number;
+export type ChapterApiConfig = {
+  chapterId: string;
+  defaultParticipants: readonly DefaultParticipant[];
+  defaultParticipantGoal: number;
   defaultCharacterKey: string;
-  legacyRunnerIdMap?: Record<string, string>;
+  legacyParticipantIdMap?: Record<string, string>;
   connectedMessage?: string;
 };
 
-export type QuestSubscription = {
-  onRunners: (runners: Runner[]) => void;
+export type ChapterSubscription = {
+  onParticipants: (participants: Runner[]) => void;
   onRuns: (runs: Run[]) => void;
   onSyncState: (sync: SyncState) => void;
 };
 
-export type QuestApi = {
-  ensureDefaultRunners: () => Promise<void>;
-  addRunner: (runner: { name: string; characterKey: string; goalMiles: number }) => Promise<void>;
-  updateRunner: (runner: {
-    id: string;
-    name: string;
-    characterKey: string;
-    goalMiles: number;
-  }) => Promise<void>;
-  addRun: (runnerId: string, miles: number, runDate: string) => Promise<void>;
-  deleteRun: (runId: string) => Promise<void>;
-  resetQuest: () => Promise<void>;
-  subscribeToQuest: (sub: QuestSubscription) => () => void;
+export type AddParticipantInput = {
+  userId?: string;
+  displayName: string;
+  characterKey: string;
+  goalMiles: number;
 };
 
-export function createQuestApi(config: QuestApiConfig): QuestApi {
+export type UpdateParticipantInput = {
+  userId: string;
+  displayName: string;
+  characterKey: string;
+  goalMiles: number;
+};
+
+export type ChapterApi = {
+  ensureDefaultParticipants: () => Promise<void>;
+  addParticipant: (input: AddParticipantInput) => Promise<void>;
+  updateParticipant: (input: UpdateParticipantInput) => Promise<void>;
+  addRun: (userId: string, miles: number, runDate: string) => Promise<void>;
+  deleteRun: (runId: string) => Promise<void>;
+  resetChapter: () => Promise<void>;
+  subscribeToChapter: (sub: ChapterSubscription) => () => void;
+};
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function generateUserId(displayName: string): string {
+  const slug = slugify(displayName) || "anon";
+  return `user-${slug}-${Date.now()}`;
+}
+
+async function upsertUser(userId: string, displayName: string): Promise<void> {
+  const ref = doc(getDb(), "users", userId);
+  const existing = await getDoc(ref);
+  if (existing.exists()) {
+    const current = existing.data() as UserDoc;
+    if (current.displayName !== displayName) {
+      await updateDoc(ref, { displayName });
+    }
+    return;
+  }
+  await setDoc(ref, {
+    displayName,
+    createdAtMs: Date.now(),
+  } satisfies UserDoc);
+}
+
+export function createChapterApi(config: ChapterApiConfig): ChapterApi {
   const {
-    questId,
-    defaultRunners,
-    defaultRunnerGoal,
+    chapterId,
+    defaultParticipants,
+    defaultParticipantGoal,
     defaultCharacterKey,
-    legacyRunnerIdMap,
+    legacyParticipantIdMap,
     connectedMessage = "Live sync active.",
   } = config;
 
-  const runnersCollection = () => collection(getDb(), "quests", questId, "runners");
-  const runsCollection = () => collection(getDb(), "quests", questId, "runs");
+  const participantsCollection = () =>
+    collection(getDb(), "chapters", chapterId, "participants");
+  const runsCollection = () =>
+    collection(getDb(), "chapters", chapterId, "runs");
+  const participantDoc = (userId: string) =>
+    doc(getDb(), "chapters", chapterId, "participants", userId);
+  const runDoc = (runId: string) =>
+    doc(getDb(), "chapters", chapterId, "runs", runId);
 
   return {
-    async ensureDefaultRunners() {
-      const snapshot = await getDocs(runnersCollection());
+    async ensureDefaultParticipants() {
+      const snapshot = await getDocs(participantsCollection());
       if (!snapshot.empty) return;
 
       await Promise.all(
-        defaultRunners.map((runner) =>
-          setDoc(doc(getDb(), "quests", questId, "runners", runner.id), {
-            name: runner.name,
-            characterKey: runner.characterKey,
-            goalMiles: runner.goalMiles,
-            createdAtMs: runner.createdAtMs,
-          }),
-        ),
+        defaultParticipants.map(async (participant) => {
+          await upsertUser(participant.userId, participant.displayName);
+          await setDoc(participantDoc(participant.userId), {
+            userId: participant.userId,
+            displayName: participant.displayName,
+            characterKey: participant.characterKey,
+            goalMiles: participant.goalMiles,
+            createdAtMs: participant.createdAtMs,
+          } satisfies ParticipantDoc);
+        }),
       );
     },
 
-    async addRunner(runner) {
-      await addDoc(runnersCollection(), {
-        name: runner.name,
-        characterKey: runner.characterKey,
-        goalMiles: runner.goalMiles,
+    async addParticipant(input) {
+      const userId = input.userId || generateUserId(input.displayName);
+      await upsertUser(userId, input.displayName);
+      await setDoc(participantDoc(userId), {
+        userId,
+        displayName: input.displayName,
+        characterKey: input.characterKey,
+        goalMiles: input.goalMiles,
         createdAtMs: Date.now(),
+      } satisfies ParticipantDoc);
+    },
+
+    async updateParticipant(input) {
+      await upsertUser(input.userId, input.displayName);
+      await updateDoc(participantDoc(input.userId), {
+        displayName: input.displayName,
+        characterKey: input.characterKey,
+        goalMiles: input.goalMiles,
       });
     },
 
-    async updateRunner(runner) {
-      await updateDoc(doc(getDb(), "quests", questId, "runners", runner.id), {
-        name: runner.name,
-        characterKey: runner.characterKey,
-        goalMiles: runner.goalMiles,
-      });
-    },
-
-    async addRun(runnerId, miles, runDate) {
+    async addRun(userId, miles, runDate) {
       await addDoc(runsCollection(), {
-        runnerId,
+        userId,
         miles,
         runDate,
         createdAtMs: Date.now(),
-      });
+      } satisfies ChapterRunDoc);
     },
 
     async deleteRun(runId) {
-      await deleteDoc(doc(getDb(), "quests", questId, "runs", runId));
+      await deleteDoc(runDoc(runId));
     },
 
-    async resetQuest() {
+    async resetChapter() {
       const snapshot = await getDocs(runsCollection());
-      await Promise.all(snapshot.docs.map((runDoc) => deleteDoc(runDoc.ref)));
+      await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
     },
 
-    subscribeToQuest({ onRunners, onRuns, onSyncState }) {
-      const unsubscribeRunners = onSnapshot(
-        runnersCollection(),
+    subscribeToChapter({ onParticipants, onRuns, onSyncState }) {
+      const unsubscribeParticipants = onSnapshot(
+        participantsCollection(),
         (snapshot) => {
-          const runners: Runner[] = snapshot.docs.map((runnerDoc) => {
-            const data = runnerDoc.data() as RunnerDoc;
+          const participants: Runner[] = snapshot.docs.map((d) => {
+            const data = d.data() as ParticipantDoc;
             return {
-              id: runnerDoc.id,
-              name: data.name || "Unnamed Runner",
+              id: d.id,
+              name: data.displayName || "Unnamed Runner",
               characterKey: data.characterKey || defaultCharacterKey,
-              goalMiles: Number(data.goalMiles) || defaultRunnerGoal,
+              goalMiles: Number(data.goalMiles) || defaultParticipantGoal,
               createdAtMs: Number(data.createdAtMs) || Date.now(),
             };
           });
-          onRunners(runners);
+          onParticipants(participants);
           onSyncState({ message: connectedMessage, status: "connected" });
         },
         (error) => {
           console.error(error);
           onSyncState({
-            message: "Runner sync failed. Check Firestore rules.",
+            message: "Participant sync failed. Check Firestore rules.",
             status: "error",
           });
         },
@@ -160,17 +218,22 @@ export function createQuestApi(config: QuestApiConfig): QuestApi {
       const unsubscribeRuns = onSnapshot(
         runsCollection(),
         (snapshot) => {
-          const runs: Run[] = snapshot.docs.map((runDoc) => {
-            const data = runDoc.data() as RunDoc;
-            let runnerId = data.runnerId;
-            if (!runnerId && data.runner && legacyRunnerIdMap?.[data.runner]) {
-              runnerId = legacyRunnerIdMap[data.runner];
+          const runs: Run[] = snapshot.docs.map((d) => {
+            const data = d.data() as ChapterRunDoc & {
+              runner?: string;
+              runnerId?: string;
+              createdAtIso?: string;
+            };
+            let userId = data.userId || data.runnerId || "";
+            if (!userId && data.runner && legacyParticipantIdMap?.[data.runner]) {
+              userId = legacyParticipantIdMap[data.runner];
             }
             return {
-              id: runDoc.id,
-              runnerId: runnerId || "",
+              id: d.id,
+              runnerId: userId,
               miles: Number(data.miles) || 0,
-              runDate: data.runDate || data.createdAtIso?.slice(0, 10) || todayIsoDate(),
+              runDate:
+                data.runDate || data.createdAtIso?.slice(0, 10) || todayIsoDate(),
               createdAtMs: Number(data.createdAtMs) || Date.now(),
             };
           });
@@ -187,7 +250,7 @@ export function createQuestApi(config: QuestApiConfig): QuestApi {
       );
 
       return () => {
-        unsubscribeRunners();
+        unsubscribeParticipants();
         unsubscribeRuns();
       };
     },

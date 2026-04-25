@@ -36,3 +36,58 @@ export type RunDoc = {
   createdAtIso?: string;
   createdAtMs?: number;
 };
+
+export type ChapterStatus = "upcoming" | "active" | "complete";
+
+export type Chapter = {
+  id: string;
+  title: string;
+  themeKey: string;
+  order: number;
+  month: number;
+  year: number;
+  startDate: string;
+  endDate: string;
+  defaultGoalMiles: number;
+  status: ChapterStatus;
+  createdAtMs: number;
+};
+
+export type ChapterDoc = {
+  title?: string;
+  themeKey?: string;
+  order?: number;
+  month?: number;
+  year?: number;
+  startDate?: string;
+  endDate?: string;
+  defaultGoalMiles?: number;
+  status?: ChapterStatus;
+  createdAtMs?: number;
+};
+
+export type User = {
+  id: string;
+  displayName: string;
+  createdAtMs: number;
+};
+
+export type UserDoc = {
+  displayName?: string;
+  createdAtMs?: number;
+};
+
+export type ParticipantDoc = {
+  userId?: string;
+  displayName?: string;
+  characterKey?: string;
+  goalMiles?: number;
+  createdAtMs?: number;
+};
+
+export type ChapterRunDoc = {
+  userId?: string;
+  miles?: number;
+  runDate?: string;
+  createdAtMs?: number;
+};

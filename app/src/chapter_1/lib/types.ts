@@ -1,12 +1,19 @@
 import type { CHARACTER_OPTIONS } from "./data";
 
 export type {
+  Chapter,
+  ChapterDoc,
+  ChapterRunDoc,
+  ChapterStatus,
+  ParticipantDoc,
   Run,
   Runner,
   RunDoc,
   RunnerDoc,
   SyncState,
   SyncStatus,
+  User,
+  UserDoc,
 } from "../../shared/lib/types";
 
 export type CharacterKey = (typeof CHARACTER_OPTIONS)[number]["key"];
