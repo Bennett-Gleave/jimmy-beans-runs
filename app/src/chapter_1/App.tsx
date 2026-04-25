@@ -1,3 +1,4 @@
+import "./styles.css";
 import { DevModeButton } from "./components/DevModeButton";
 import { HeroPanel } from "./components/HeroPanel";
 import { ProgressChart } from "./components/ProgressChart";

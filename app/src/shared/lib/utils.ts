@@ -1,6 +1,3 @@
-import { CHARACTER_OPTIONS, CUSTOM_CHARACTER_IMAGES, CUSTOM_RUNNER_IMAGES } from "./data";
-import type { Character, Runner } from "./types";
-
 export function todayIsoDate(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -27,24 +24,8 @@ export function parseDateLabel(isoDate: string | null | undefined): string {
   }).format(parsed);
 }
 
-export function characterFor(key: string): Character {
-  return (
-    (CHARACTER_OPTIONS.find((character) => character.key === key) as Character | undefined) ||
-    (CHARACTER_OPTIONS[0] as Character)
-  );
-}
-
 export function normalizeRunnerKey(value: string | null | undefined): string {
   return String(value || "")
     .trim()
     .toLowerCase();
-}
-
-export function customImageForRunner(runner: Runner): string | null {
-  return (
-    CUSTOM_RUNNER_IMAGES[runner.id] ||
-    CUSTOM_RUNNER_IMAGES[normalizeRunnerKey(runner.name)] ||
-    CUSTOM_CHARACTER_IMAGES[runner.characterKey] ||
-    null
-  );
 }

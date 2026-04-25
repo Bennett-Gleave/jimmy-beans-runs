@@ -32,3 +32,16 @@ When making changes:
 ## API scope
 
 The `/api` service is intentionally narrow: watch the DB, post to Slack. It is not a general backend for the frontend — both apps talk to Firebase directly for data.
+
+## React app structure (`/app/src`)
+
+Quests are organized as **chapters**. Each chapter is a self-contained themed app (its own UI, components, styles, assets) that shares the data layer.
+
+- `landing/` — landing page with the animated book that flips pages and lands on the current chapter. Routes to chapters via URL hash (`#chapter-1`, `#chapter-2`).
+- `AppRouter.tsx` — tiny hash router. Renders `Landing` by default, lazy-loads chapters on navigation (so each chapter's CSS only loads when its route is active).
+- `shared/lib/` — generic data layer used by every chapter. `createQuestApi({ questId, defaultRunners, ... })` returns the Firestore CRUD + subscription functions. Also: `selectors`, `types` (Runner/Run/SyncState), `utils`, `firebaseConfig`, `admin`.
+- `chapter_1/` — current/live chapter (LOTR theme). `lib/firebase.ts` is a thin wrapper that calls `createQuestApi` with this chapter's QUEST_ID and theme defaults; the rest of `lib/` re-exports from `shared/`. UI lives in `components/`, `games/`, `hooks/`, `store/`.
+- `chapter_2/` — skeleton for the next chapter. Same `lib/` shape. Theme + UI TBD.
+- `app/public/chapter_N/assets/` — static assets for each chapter (referenced as `/chapter_N/assets/...`).
+
+To add a new chapter: copy `chapter_2/` as a template, set its `QUEST_ID` and theme data in `lib/data.ts`, build the UI in `components/`, then add an entry to `landing/chapters.ts` and a lazy import in `AppRouter.tsx`.
