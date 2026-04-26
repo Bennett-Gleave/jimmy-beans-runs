@@ -1,3 +1,4 @@
+import "./lightsaber.js";
 import { createChapterApi } from "../lib/chapterApi.js";
 import { hasFirebaseConfig } from "../lib/firebaseConfig.js";
 import {
