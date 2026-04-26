@@ -1,6 +1,6 @@
 ---
 import "../styles/chapter_2.css";
-const title = "Jimmy-Bean Runs · Chapter 2 (stub)";
+const title = "Jimmy-Bean Runs · Chapter 2";
 ---
 
 <!doctype html>
@@ -12,55 +12,167 @@ const title = "Jimmy-Bean Runs · Chapter 2 (stub)";
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
-    <main>
+    <main class="chapter-shell">
       <a class="back-link" href="/">← All chapters</a>
-      <p class="eyebrow">Chapter 2 · Star Wars</p>
-      <h1>A galaxy far, far away (stub)</h1>
-      <p class="lede">
-        DB-wired stub for chapter 2. Reads/writes
-        <code>chapters/chapter-2/participants</code> and
-        <code>chapters/chapter-2/runs</code>. UI/theme to be filled in by the
-        coworker.
-      </p>
+
+      <section class="hero-panel">
+        <div class="hero-copy">
+          <p class="eyebrow" id="chapterEyebrow">Chapter 2 · May 2026</p>
+          <h1>Destroy the Death Star</h1>
+          <p class="lede" id="chapterDescription">
+            The rebels race through May by stacking experience points from every kind of training.
+          </p>
+          <p class="system-copy" id="pointsExplanation">
+            Scoring uses active minutes as the base, then multiplies by workout type.
+          </p>
+        </div>
+
+        <div class="hero-totals">
+          <article class="stat-card primary-stat">
+            <p class="stat-label">Rebel XP</p>
+            <div class="stat-row">
+              <span id="totalPoints" class="stat-value">0</span>
+              <span class="stat-sep">/</span>
+              <span id="goalPoints" class="stat-goal">0</span>
+              <span class="stat-unit">XP</span>
+            </div>
+            <div class="progress-shell">
+              <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+              </div>
+              <p id="progressText" class="progress-copy">Recruit the squad to establish the attack plan.</p>
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <p class="stat-label">Active Time</p>
+            <p id="activeTime" class="stat-value compact">0m</p>
+            <p class="tiny-copy">All logged training minutes across the chapter.</p>
+          </article>
+
+          <article class="stat-card">
+            <p class="stat-label">Rebel Level</p>
+            <p id="rebelLevel" class="stat-value compact">1</p>
+            <p class="tiny-copy">Level climbs as the fleet earns XP and diversifies training.</p>
+          </article>
+        </div>
+      </section>
 
       <div id="syncBanner" class="sync-banner" data-status="idle">Connecting…</div>
 
-      <dl class="totals">
-        <div>
-          <dt>Total miles</dt>
-          <dd><span id="totalMiles">0.0</span></dd>
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Rebel Roster</p>
+            <h2>Crew goals build the fleet target</h2>
+          </div>
+          <div class="panel-actions">
+            <button id="addParticipantButton" type="button">Add Rebel</button>
+            <button id="resetRunsButton" type="button" class="ghost-button">Reset Month</button>
+          </div>
         </div>
-        <div>
-          <dt>Goal miles</dt>
-          <dd><span id="goalMiles">0.0</span></dd>
-        </div>
-        <div>
-          <dt>Participants</dt>
-          <dd><span id="runnerCount">0</span></dd>
-        </div>
-        <div>
-          <dt>Runs logged</dt>
-          <dd><span id="runCount">0</span></dd>
-        </div>
-      </dl>
-
-      <section id="runnerGrid" class="stub-grid"></section>
-
-      <section class="stub-todo">
-        <p class="stub-eyebrow">TODO (coworker)</p>
-        <ul>
-          <li>Replace <code>CHARACTER_OPTIONS</code> in <code>src/scripts/chapter_2/data.js</code> with the real Star Wars roster.</li>
-          <li>Fill in <code>SIDE_QUESTS</code> + <code>PLAYABLE_SIDE_QUESTS</code> for the chapter milestones.</li>
-          <li>Drop chapter assets in <code>public/chapter_2/assets/</code>.</li>
-          <li>Build the themed UI in this page (sections from chapter-1 are a useful reference).</li>
-        </ul>
+        <section id="runnerGrid" class="runner-grid"></section>
       </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Flight Path</p>
+            <h2>Advance across eight planets on the road to the trench run</h2>
+          </div>
+        </div>
+        <p class="panel-copy">Each planet unlocks in order as the rebellion earns more XP. The route scales automatically from the total goal set by the active rebel roster.</p>
+        <section id="flightPath" class="flight-path"></section>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Ship Hangar</p>
+            <h2>Unlocked ships appear here as the fleet comes online</h2>
+          </div>
+        </div>
+        <p class="panel-copy">Locked ships stay in silhouette until their matching planet threshold is cleared.</p>
+        <section id="shipGrid" class="ship-grid"></section>
+      </section>
+
     </main>
+
+    <dialog id="participantModal" class="modal">
+      <form id="participantForm" class="modal-form">
+        <div class="modal-body">
+          <p id="participantModalEyebrow" class="eyebrow">New Rebel</p>
+          <h2 id="participantModalTitle">Add a crew member</h2>
+          <p class="panel-copy">Each rebel sets a personal monthly XP target. The chapter goal is the sum of all rebel goals.</p>
+          <input id="participantId" name="participantId" type="hidden" />
+
+          <section class="preset-guide" aria-labelledby="presetGuideTitle">
+            <h3 id="presetGuideTitle">Goal Guide</h3>
+            <div id="participantPresetGuide" class="preset-guide-grid"></div>
+          </section>
+
+          <label>
+            <span>Name</span>
+            <input id="participantName" name="participantName" type="text" maxlength="32" required />
+          </label>
+
+          <label>
+            <span>Character</span>
+            <select id="participantCharacter" name="characterKey" required></select>
+          </label>
+
+          <label>
+            <span>Goal tier</span>
+            <select id="participantGoalPreset" name="goalPreset" required></select>
+          </label>
+
+          <p id="participantGoalPresetCopy" class="panel-copy"></p>
+
+          <label id="participantGoalWrap">
+            <span>Monthly goal (XP)</span>
+            <input id="participantGoal" name="goalMiles" type="number" min="1" step="1" value="600" required />
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelParticipantButton" class="ghost-button">Cancel</button>
+          <button type="submit" id="saveParticipantButton">Save Rebel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="deleteRunModal" class="modal">
+      <form method="dialog" class="modal-form">
+        <div class="modal-body">
+          <p class="eyebrow">Delete Entry</p>
+          <h2>Remove this workout?</h2>
+          <p id="deleteRunDescription" class="panel-copy"></p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancelDeleteRunButton" class="ghost-button">Keep It</button>
+          <button type="button" id="confirmDeleteRunButton" class="danger-button">Delete</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="resetModal" class="modal">
+      <form method="dialog" class="modal-form">
+        <div class="modal-body">
+          <p class="eyebrow">Reset Month</p>
+          <h2>Delete all logged workouts?</h2>
+          <p class="panel-copy">This keeps the rebel roster and their goals, but clears every Chapter 2 workout entry.</p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancelResetButton" class="ghost-button">Keep Logs</button>
+          <button type="button" id="confirmResetButton" class="danger-button">Confirm Reset</button>
+        </div>
+      </form>
+    </dialog>
 
     <script>
       import "../scripts/chapter_2/main.js";

@@ -129,9 +129,26 @@ export function createChapterApi(config) {
       await deleteDoc(participantDoc(userId));
     },
 
-    async addRun(userId, miles, runDate) {
+    async addRun(userIdOrEntry, miles, runDate) {
+      if (typeof userIdOrEntry === "object" && userIdOrEntry !== null) {
+        const entry = userIdOrEntry;
+        await addDoc(runsCol(), {
+          userId: entry.userId,
+          runnerId: entry.userId,
+          miles: Number(entry.miles) || 0,
+          points: Number(entry.points) || 0,
+          durationMinutes: Number(entry.durationMinutes) || 0,
+          activityType: entry.activityType || "running",
+          notes: entry.notes || "",
+          runDate: entry.runDate || todayIsoDate(),
+          createdAtMs: Date.now(),
+        });
+        return;
+      }
+
       await addDoc(runsCol(), {
-        userId,
+        userId: userIdOrEntry,
+        runnerId: userIdOrEntry,
         miles,
         runDate,
         createdAtMs: Date.now(),
@@ -185,6 +202,10 @@ export function createChapterApi(config) {
               id: d.id,
               runnerId,
               miles: Number(data.miles) || 0,
+              points: Number(data.points) || 0,
+              durationMinutes: Number(data.durationMinutes) || 0,
+              activityType: data.activityType || "running",
+              notes: data.notes || "",
               runDate: data.runDate || data.createdAtIso?.slice(0, 10) || todayIsoDate(),
               createdAtMs: Number(data.createdAtMs) || Date.now(),
             };
