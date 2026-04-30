@@ -6,32 +6,37 @@ export const GOAL_PRESETS = [
   {
     key: "padawan",
     label: "Padawan",
-    points: 300,
-    description: "About 20-30 minutes, 4 days each week. Roughly 300 XP.",
+    targetLevel: 4,
+    points: 360,
+    description: "Reach Level 4. About 20-30 minutes, 4 days each week.",
   },
   {
     key: "pilot",
     label: "Pilot",
-    points: 450,
-    description: "About 30-40 minutes, 4-5 days each week. Roughly 450 XP.",
+    targetLevel: 5,
+    points: 480,
+    description: "Reach Level 5. About 30-40 minutes, 4-5 days each week.",
   },
   {
     key: "squad-leader",
     label: "Squad Leader",
+    targetLevel: 6,
     points: 600,
-    description: "About 40-50 minutes, 5 days each week. Roughly 600 XP.",
+    description: "Reach Level 6. About 40-50 minutes, 5 days each week.",
   },
   {
     key: "jedi-master",
     label: "Jedi Master",
-    points: 800,
-    description: "About 50-60 minutes, 5-6 days each week. Roughly 800 XP.",
+    targetLevel: 8,
+    points: 840,
+    description: "Reach Level 8. About 50-60 minutes, 5-6 days each week.",
   },
   {
     key: "custom",
     label: "Custom",
+    targetLevel: 6,
     points: DEFAULT_RUNNER_GOAL,
-    description: "Set a custom monthly target.",
+    description: "Set a custom target level.",
   },
 ];
 
@@ -218,8 +223,59 @@ export function calculateWorkoutPoints(activityKey, durationMinutes, existingRun
   };
 }
 
+export const LEVEL_THRESHOLDS = [
+  0,
+  100,
+  220,
+  360,
+  520,
+  700,
+  900,
+  1120,
+  1360,
+  1620,
+];
+
+export function pointsForLevel(level) {
+  const safeLevel = Math.max(1, Math.floor(Number(level) || 1));
+  if (safeLevel <= LEVEL_THRESHOLDS.length) {
+    return LEVEL_THRESHOLDS[safeLevel - 1];
+  }
+
+  let total = LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+  let increment = 260;
+  for (let currentLevel = LEVEL_THRESHOLDS.length + 1; currentLevel <= safeLevel; currentLevel += 1) {
+    total += increment;
+    increment += 20;
+  }
+  return total;
+}
+
+export function nextLevelPoints(level) {
+  return pointsForLevel(Math.max(2, Math.floor(Number(level) || 1) + 1));
+}
+
 export function levelForPoints(points) {
-  return Math.max(1, Math.floor((Number(points) || 0) / 120) + 1);
+  const safePoints = Math.max(0, Number(points) || 0);
+  let resolvedLevel = 1;
+
+  for (let level = 1; level <= LEVEL_THRESHOLDS.length; level += 1) {
+    if (safePoints >= pointsForLevel(level)) {
+      resolvedLevel = level;
+    } else {
+      break;
+    }
+  }
+
+  if (resolvedLevel < LEVEL_THRESHOLDS.length) {
+    return resolvedLevel;
+  }
+
+  let level = LEVEL_THRESHOLDS.length;
+  while (safePoints >= nextLevelPoints(level)) {
+    level += 1;
+  }
+  return level;
 }
 
 export function daysInChapterMonth() {

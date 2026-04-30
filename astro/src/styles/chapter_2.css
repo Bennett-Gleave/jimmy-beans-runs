@@ -37,6 +37,8 @@ body {
   font-size: 25px;
   line-height: 1.22;
   letter-spacing: 0.01em;
+  overflow-x: hidden;
+  transition: background 180ms ease-out;
 }
 
 body::before,
@@ -53,7 +55,9 @@ body::before {
     radial-gradient(circle at 64% 16%, rgba(126, 226, 255, 0.12) 0 1px, transparent 1.5px),
     radial-gradient(circle at 78% 62%, rgba(255, 210, 76, 0.14) 0 1px, transparent 1.5px),
     radial-gradient(circle at 38% 78%, rgba(255, 255, 255, 0.1) 0 1px, transparent 1.5px);
+  transform-origin: 50% 50%;
   opacity: 0.7;
+  transition: opacity 180ms ease-out, transform 180ms ease-out, filter 180ms ease-out, background 180ms ease-out;
 }
 
 body::after {
@@ -62,6 +66,86 @@ body::after {
     linear-gradient(90deg, rgba(255,255,255,0.02), transparent 16%, transparent 84%, rgba(255,255,255,0.02));
   mix-blend-mode: screen;
   opacity: 0.28;
+  transition: opacity 180ms ease-out, transform 180ms ease-out, filter 180ms ease-out, background 180ms ease-out;
+}
+
+body.is-hyperspace-jump {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(173, 226, 255, 0.26), transparent 16%),
+    radial-gradient(circle at 46% 58%, rgba(255, 219, 109, 0.14), transparent 18%),
+    linear-gradient(180deg, #02050d 0%, #030712 100%);
+}
+
+body.is-hyperspace-jump::before {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 2%,
+      rgba(195, 234, 255, 0.88) 2.2% 2.35%,
+      transparent 2.5% 7.5%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 6%,
+      rgba(132, 206, 255, 0.74) 6.2% 6.34%,
+      transparent 6.5% 12%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 9%,
+      rgba(255, 224, 140, 0.42) 9.1% 9.18%,
+      transparent 9.3% 14%
+    );
+  opacity: 1;
+  filter: blur(0.35px) drop-shadow(0 0 12px rgba(155, 220, 255, 0.34));
+  animation: hyperspace-streaks 960ms cubic-bezier(0.16, 0.8, 0.18, 1) forwards;
+}
+
+body.is-hyperspace-jump::after {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.46), transparent 0 10%, transparent 24%),
+    linear-gradient(90deg, transparent 0%, rgba(174, 229, 255, 0.22) 42%, rgba(255,255,255,0.58) 50%, rgba(174, 229, 255, 0.22) 58%, transparent 100%);
+  opacity: 0.85;
+  filter: blur(12px);
+  animation: hyperspace-flash 960ms cubic-bezier(0.16, 0.8, 0.18, 1) forwards;
+}
+
+@keyframes hyperspace-streaks {
+  0% {
+    transform: scaleX(0.15) scaleY(1.6);
+    opacity: 0;
+  }
+  12% {
+    transform: scaleX(0.65) scaleY(1.2);
+    opacity: 0.95;
+  }
+  56% {
+    transform: scaleX(1.55) scaleY(0.9);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(2.2) scaleY(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes hyperspace-flash {
+  0% {
+    transform: scaleX(0.25);
+    opacity: 0;
+  }
+  18% {
+    transform: scaleX(0.75);
+    opacity: 0.82;
+  }
+  58% {
+    transform: scaleX(1.25);
+    opacity: 0.68;
+  }
+  100% {
+    transform: scaleX(1.65);
+    opacity: 0;
+  }
 }
 
 a {
@@ -317,6 +401,82 @@ h3 {
   gap: 10px;
 }
 
+.level-shell {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.level-shell-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.level-shell-label {
+  margin: 0;
+  font-family: "Orbitron", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.level-bar {
+  position: relative;
+  height: 28px;
+  border: 1px solid rgba(144, 198, 255, 0.38);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)),
+    rgba(7, 13, 24, 0.82);
+  overflow: hidden;
+}
+
+.level-fill {
+  width: 0%;
+  height: 100%;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.18), transparent 18%),
+    linear-gradient(90deg, #6b56d8 0%, #8b72ff 48%, #e09020 100%);
+  transition: width 240ms ease;
+}
+
+.level-bar-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #f3f6ff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
+}
+
+.runner-level-shell {
+  margin: 0 18px 14px;
+}
+
+.runner-level-shell .level-shell-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.runner-level-bar {
+  height: 22px;
+  border-color: rgba(255, 210, 76, 0.26);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)),
+    rgba(9, 15, 28, 0.86);
+}
+
+.runner-level-overlay {
+  font-size: 9px;
+}
+
 .progress-bar {
   height: 20px;
   border: 1px solid var(--border-strong);
@@ -455,6 +615,30 @@ h3 {
   text-shadow: 0 0 18px rgba(255, 210, 76, 0.08);
 }
 
+.runner-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.runner-level-chip {
+  font-family: "Orbitron", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.runner-target-level {
+  margin: 0 0 8px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
 .runner-flavor {
   margin: 0;
   color: var(--muted);
@@ -470,7 +654,7 @@ h3 {
 
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 16px 18px 14px;
   min-width: 0;

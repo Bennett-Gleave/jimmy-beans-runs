@@ -13,7 +13,9 @@ import {
   GOAL_PRESETS,
   LEGACY_PARTICIPANT_ID_MAP,
   levelForPoints,
+  nextLevelPoints,
   PLANET_UNLOCKS,
+  pointsForLevel,
   SUPPORT_UNLOCKS,
 } from "./data.js";
 
@@ -29,6 +31,8 @@ const api = createChapterApi({
 const BUTTON_CLICK_SOUND_PATH = "/chapter_2/star-wars-blaster.mp3";
 const BUTTON_CLICK_AUDIO_POOL_SIZE = 4;
 const BUTTON_SOUND_MUTED_STORAGE_KEY = "chapter2-button-sound-muted";
+const HYPERSPACE_CLASS_NAME = "is-hyperspace-jump";
+const HYPERSPACE_DURATION_MS = 980;
 const IMPERIAL_MARCH_VOLUME = 0.035;
 const buttonClickAudioPool = Array.from({ length: BUTTON_CLICK_AUDIO_POOL_SIZE }, () =>
   typeof Audio === "function" ? new Audio(BUTTON_CLICK_SOUND_PATH) : null,
@@ -36,6 +40,7 @@ const buttonClickAudioPool = Array.from({ length: BUTTON_CLICK_AUDIO_POOL_SIZE }
 let buttonClickAudioIndex = 0;
 let isButtonSoundMuted = window.localStorage.getItem(BUTTON_SOUND_MUTED_STORAGE_KEY) === "true";
 let imperialMarchAudioContext = null;
+let hyperspaceTimeoutId = null;
 
 buttonClickAudioPool.forEach((audio) => {
   audio.preload = "auto";
@@ -60,6 +65,10 @@ const els = {
   progressText: document.getElementById("progressText"),
   activeTime: document.getElementById("activeTime"),
   rebelLevel: document.getElementById("rebelLevel"),
+  levelCurrent: document.getElementById("levelCurrent"),
+  levelRemaining: document.getElementById("levelRemaining"),
+  levelFill: document.getElementById("levelFill"),
+  levelProgressText: document.getElementById("levelProgressText"),
   addParticipantButton: document.getElementById("addParticipantButton"),
   resetRunsButton: document.getElementById("resetRunsButton"),
   runnerGrid: document.getElementById("runnerGrid"),
@@ -619,6 +628,20 @@ function presetForGoal(goalPoints) {
   return GOAL_PRESETS.find((preset) => preset.points === Number(goalPoints) && preset.key !== "custom") || null;
 }
 
+function pointsForTargetLevel(level) {
+  const safeLevel = Math.max(2, Number(level) || 2);
+  return pointsForLevel(safeLevel);
+}
+
+function targetLevelForGoal(goalPoints) {
+  const safeGoal = Math.max(0, Number(goalPoints) || 0);
+  let resolvedLevel = Math.max(2, levelForPoints(safeGoal));
+  while (pointsForLevel(resolvedLevel) < safeGoal) {
+    resolvedLevel += 1;
+  }
+  return resolvedLevel;
+}
+
 function runsForRunner(runnerId) {
   return state.runs
     .filter((run) => run.runnerId === runnerId)
@@ -667,11 +690,22 @@ function renderTotals() {
   const minutes = totalMinutes();
   const progress = goal > 0 ? Math.min(points / goal, 1) : 0;
   const remaining = Math.max(goal - points, 0);
+  const level = totalLevel();
+  const currentLevelFloor = pointsForLevel(level);
+  const nextLevelFloor = nextLevelPoints(level);
+  const pointsIntoLevel = Math.max(points - currentLevelFloor, 0);
+  const levelSpan = Math.max(nextLevelFloor - currentLevelFloor, 1);
+  const levelRemaining = Math.max(nextLevelFloor - points, 0);
+  const levelProgress = Math.min(pointsIntoLevel / levelSpan, 1);
 
   els.totalPoints.textContent = formatPoints(points);
   els.goalPoints.textContent = formatPoints(goal);
   els.activeTime.textContent = formatMinutes(minutes);
-  els.rebelLevel.textContent = String(totalLevel());
+  els.rebelLevel.textContent = String(level);
+  els.levelCurrent.textContent = String(level);
+  els.levelRemaining.textContent = formatPoints(levelRemaining);
+  els.levelFill.style.width = `${levelProgress * 100}%`;
+  els.levelProgressText.textContent = `${formatPoints(pointsIntoLevel)} / ${formatPoints(levelSpan)} XP`;
   els.progressFill.style.width = `${progress * 100}%`;
 
   if (goal <= 0) {
@@ -689,8 +723,15 @@ function runnerCardMarkup(runner) {
   const points = totalPointsForRunner(runner.id);
   const minutes = totalMinutesForRunner(runner.id);
   const goal = Number(runner.goalMiles || DEFAULT_RUNNER_GOAL);
+  const targetLevel = targetLevelForGoal(goal);
   const progress = goal > 0 ? Math.min(points / goal, 1) : 0;
   const level = levelForPoints(points);
+  const currentLevelFloor = pointsForLevel(level);
+  const nextLevelFloor = nextLevelPoints(level);
+  const pointsIntoLevel = Math.max(points - currentLevelFloor, 0);
+  const levelSpan = Math.max(nextLevelFloor - currentLevelFloor, 1);
+  const levelRemaining = Math.max(nextLevelFloor - points, 0);
+  const levelProgress = Math.min(pointsIntoLevel / levelSpan, 1);
   const avatarMarkup = runner.imageUrl
     ? `<div class="avatar" style="background-image:url('${runner.imageUrl}')"></div>`
     : `<div class="avatar">${normalizeNameInitials(runner.name)}</div>`;
@@ -746,7 +787,11 @@ function runnerCardMarkup(runner) {
           ${avatarMarkup}
           <div>
             <p class="runner-role">${character.label}</p>
-            <h3 class="runner-name">${runner.name}</h3>
+            <div class="runner-name-row">
+              <h3 class="runner-name">${runner.name}</h3>
+              <span class="runner-level-chip">Lv ${level}</span>
+            </div>
+            <p class="runner-target-level">Target level: ${targetLevel}</p>
             <p class="runner-flavor">${character.flavor}</p>
           </div>
         </div>
@@ -759,20 +804,29 @@ function runnerCardMarkup(runner) {
           <p class="micro-value">${formatPoints(points)}</p>
         </div>
         <div class="micro-card">
-          <p class="micro-label">Goal</p>
-          <p class="micro-value">${formatPoints(goal)}</p>
+          <p class="micro-label">Target Lv</p>
+          <p class="micro-value">${targetLevel}</p>
         </div>
         <div class="micro-card">
           <p class="micro-label">Time</p>
           <p class="micro-value">${formatMinutes(minutes)}</p>
         </div>
-        <div class="micro-card">
-          <p class="micro-label">Level</p>
-          <p class="micro-value">${level}</p>
-        </div>
       </div>
 
-      <p class="panel-copy">${Math.round(progress * 100)}% of personal goal complete.</p>
+      <p class="panel-copy">${Math.round(progress * 100)}% of target level complete.</p>
+
+      <div class="level-shell runner-level-shell">
+        <div class="level-shell-header">
+          <p class="level-shell-label">Level ${level}</p>
+          <p class="level-shell-label">${formatPoints(levelRemaining)} XP to next</p>
+        </div>
+        <div class="level-bar runner-level-bar">
+          <div class="level-fill" style="width:${levelProgress * 100}%"></div>
+          <div class="level-bar-overlay runner-level-overlay">
+            <span>${formatPoints(pointsIntoLevel)} / ${formatPoints(levelSpan)} XP</span>
+          </div>
+        </div>
+      </div>
 
       <details class="runner-support">
         <summary class="runner-support-toggle">
@@ -923,7 +977,7 @@ function renderCharacterOptions(excludeRunnerId = "", selectedCharacterKey = "")
 
 function renderGoalPresetOptions() {
   els.participantGoalPreset.innerHTML = GOAL_PRESETS.map(
-    (preset) => `<option value="${preset.key}">${preset.label} · ${preset.points} XP</option>`,
+    (preset) => `<option value="${preset.key}">${preset.label} · Level ${preset.targetLevel}</option>`,
   ).join("");
 }
 
@@ -934,7 +988,7 @@ function renderGoalPresetGuide() {
     return `
       <article class="preset-guide-card ${isActive ? "is-active" : ""}">
         <p class="preset-guide-label">${preset.label}</p>
-        <p class="preset-guide-points">${preset.points} XP</p>
+        <p class="preset-guide-points">Level ${preset.targetLevel}</p>
         <p class="preset-guide-copy">${preset.description}</p>
       </article>
     `;
@@ -948,7 +1002,7 @@ function syncGoalPresetUi() {
   const isCustom = preset.key === "custom";
   els.participantGoalWrap.hidden = !isCustom;
   if (!isCustom) {
-    els.participantGoal.value = String(preset.points);
+    els.participantGoal.value = String(preset.targetLevel);
   }
   renderGoalPresetGuide();
 }
@@ -971,7 +1025,7 @@ function openParticipantModal(mode, runner = null) {
     els.participantId.value = runner.id;
     els.participantName.value = runner.name;
     els.participantCharacter.value = runner.characterKey;
-    els.participantGoal.value = String(runner.goalMiles || DEFAULT_RUNNER_GOAL);
+    els.participantGoal.value = String(targetLevelForGoal(runner.goalMiles || DEFAULT_RUNNER_GOAL));
     els.participantGoalPreset.value = presetForGoal(runner.goalMiles)?.key || "custom";
   } else {
     els.participantModalEyebrow.textContent = "New Rebel";
@@ -982,7 +1036,7 @@ function openParticipantModal(mode, runner = null) {
     renderCharacterOptions("", availableCharacterKey);
     els.participantCharacter.value = availableCharacterKey;
     els.participantGoalPreset.value = presetForGoal(DEFAULT_RUNNER_GOAL)?.key || "squad-leader";
-    els.participantGoal.value = String(DEFAULT_RUNNER_GOAL);
+    els.participantGoal.value = String(targetLevelForGoal(DEFAULT_RUNNER_GOAL));
   }
 
   syncGoalPresetUi();
@@ -1072,6 +1126,22 @@ async function playImperialMarchClip() {
   });
 }
 
+function triggerHyperspaceJump() {
+  document.body.classList.remove(HYPERSPACE_CLASS_NAME);
+  if (hyperspaceTimeoutId) {
+    window.clearTimeout(hyperspaceTimeoutId);
+  }
+
+  // Force a style flush so repeated logs can replay the animation immediately.
+  void document.body.offsetWidth;
+  document.body.classList.add(HYPERSPACE_CLASS_NAME);
+
+  hyperspaceTimeoutId = window.setTimeout(() => {
+    document.body.classList.remove(HYPERSPACE_CLASS_NAME);
+    hyperspaceTimeoutId = null;
+  }, HYPERSPACE_DURATION_MS);
+}
+
 function syncMuteToggle() {
   if (!els.muteToggle) return;
   els.muteToggle.classList.toggle("is-muted", isButtonSoundMuted);
@@ -1109,12 +1179,13 @@ function bindUi() {
     const id = els.participantId.value.trim();
     const name = els.participantName.value.trim();
     const characterKey = els.participantCharacter.value || DEFAULT_CHARACTER_KEY;
-    const goalMiles = Number.parseInt(els.participantGoal.value, 10);
+    const goalLevel = Number.parseInt(els.participantGoal.value, 10);
+    const goalMiles = pointsForTargetLevel(goalLevel);
     const selectedElsewhere = state.participants.some(
       (participant) => participant.id !== id && participant.characterKey === characterKey,
     );
 
-    if (!name || !Number.isFinite(goalMiles) || goalMiles <= 0 || selectedElsewhere) return;
+    if (!name || !Number.isFinite(goalLevel) || goalLevel < 2 || selectedElsewhere) return;
 
     try {
       if (state.participantModalMode === "edit" && id) {
@@ -1166,6 +1237,7 @@ function bindUi() {
         miles: 0,
         runDate,
       });
+      triggerHyperspaceJump();
       playImperialMarchClip();
       form.reset();
       form.elements.durationMinutes.value = "30";

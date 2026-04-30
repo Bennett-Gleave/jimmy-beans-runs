@@ -51,6 +51,18 @@ const title = "Jimmy-Bean Runs · The Anniepire Strikes Back";
               <span id="goalPoints" class="stat-goal">0</span>
               <span class="stat-unit">XP</span>
             </div>
+            <div class="level-shell">
+              <div class="level-shell-header">
+                <p class="level-shell-label">Level <span id="levelCurrent">1</span></p>
+                <p class="level-shell-label">Next level in <span id="levelRemaining">120</span> XP</p>
+              </div>
+              <div class="level-bar">
+                <div id="levelFill" class="level-fill"></div>
+                <div class="level-bar-overlay">
+                  <span id="levelProgressText">0 / 120 XP</span>
+                </div>
+              </div>
+            </div>
             <div class="progress-shell">
               <div class="progress-bar">
                 <div id="progressFill" class="progress-fill"></div>
@@ -118,7 +130,7 @@ const title = "Jimmy-Bean Runs · The Anniepire Strikes Back";
         <div class="modal-body">
           <p id="participantModalEyebrow" class="eyebrow">New Rebel</p>
           <h2 id="participantModalTitle">Add a crew member</h2>
-          <p class="panel-copy">Each rebel sets a personal monthly XP target. The chapter goal is the sum of all rebel goals.</p>
+          <p class="panel-copy">Each rebel sets a personal target level. The chapter XP target is derived automatically from those level goals.</p>
           <input id="participantId" name="participantId" type="hidden" />
 
           <section class="preset-guide" aria-labelledby="presetGuideTitle">
@@ -137,15 +149,15 @@ const title = "Jimmy-Bean Runs · The Anniepire Strikes Back";
           </label>
 
           <label>
-            <span>Goal tier</span>
+            <span>Target rank</span>
             <select id="participantGoalPreset" name="goalPreset" required></select>
           </label>
 
           <p id="participantGoalPresetCopy" class="panel-copy"></p>
 
           <label id="participantGoalWrap">
-            <span>Monthly goal (XP)</span>
-            <input id="participantGoal" name="goalMiles" type="number" min="1" step="1" value="600" required />
+            <span>Target level</span>
+            <input id="participantGoal" name="goalMiles" type="number" min="2" step="1" value="6" required />
           </label>
         </div>
 
