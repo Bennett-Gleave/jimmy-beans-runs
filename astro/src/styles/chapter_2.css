@@ -251,6 +251,28 @@ h3 {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+.runner-card {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 24px;
+  border-color: rgba(255, 210, 76, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 120, 0.07), transparent 16%),
+    linear-gradient(180deg, rgba(30, 43, 78, 0.96), rgba(12, 20, 39, 0.98));
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(255, 210, 76, 0.06);
+}
+
+.runner-card > .panel-copy,
+.runner-card > .runner-support,
+.runner-card > .entry-form,
+.runner-card > .entry-log {
+  margin-left: 18px;
+  margin-right: 18px;
+}
+
 .stat-label {
   margin: 0 0 14px;
   font-size: 10px;
@@ -364,7 +386,7 @@ h3 {
 }
 
 .runner-grid {
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .flight-path {
@@ -381,8 +403,13 @@ h3 {
   justify-content: space-between;
   gap: 14px;
   align-items: flex-start;
-  margin-bottom: 14px;
+  margin-bottom: 0;
   min-width: 0;
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid rgba(255, 210, 76, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 120, 0.18), rgba(255, 214, 120, 0.04)),
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0));
 }
 
 .runner-ident {
@@ -393,11 +420,13 @@ h3 {
 }
 
 .avatar {
-  width: 72px;
-  height: 72px;
-  border: 1px solid rgba(255, 210, 76, 0.55);
-  border-radius: 18px;
-  background: #16253f center/cover no-repeat;
+  width: 78px;
+  height: 78px;
+  border: 2px solid rgba(255, 210, 76, 0.58);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0)),
+    #16253f center/cover no-repeat;
   display: grid;
   place-items: center;
   font-family: "Orbitron", sans-serif;
@@ -406,40 +435,58 @@ h3 {
   flex: 0 0 auto;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 0 0 1px rgba(255,255,255,0.08),
     0 10px 18px rgba(0,0,0,0.22);
 }
 
 .runner-role {
   margin: 0 0 6px;
-  color: var(--accent-2);
+  color: #ffd24c;
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .runner-name {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
+  font-size: 28px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 18px rgba(255, 210, 76, 0.08);
 }
 
 .runner-flavor {
   margin: 0;
   color: var(--muted);
   overflow-wrap: anywhere;
+  max-width: 44ch;
+}
+
+.runner-card-header .ghost-button {
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  align-self: center;
 }
 
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin-bottom: 14px;
+  margin: 16px 18px 14px;
   min-width: 0;
 }
 
 .micro-card {
-  padding: 12px;
-  border: 1px solid rgba(132, 176, 235, 0.28);
-  border-radius: 16px;
+  padding: 12px 12px 10px;
+  border: 1px solid rgba(255, 210, 76, 0.22);
+  border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)),
-    rgba(9, 16, 29, 0.8);
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)),
+    rgba(15, 24, 43, 0.9);
   min-width: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 6px 14px rgba(0,0,0,0.16);
 }
 
 .micro-label {
@@ -447,7 +494,7 @@ h3 {
   font-family: "Orbitron", sans-serif;
   font-size: 9px;
   font-weight: 700;
-  color: var(--accent);
+  color: #ffd24c;
   text-transform: uppercase;
   letter-spacing: 0.16em;
 }
@@ -462,7 +509,7 @@ h3 {
 
 .entry-form {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.72fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 118px minmax(0, 1.1fr) 124px;
   gap: 10px;
   align-items: end;
   margin-bottom: 14px;
@@ -475,15 +522,22 @@ h3 {
 
 .entry-form button[type="submit"] {
   white-space: nowrap;
+  width: 100%;
+  min-width: 0;
+}
+
+.entry-form input,
+.entry-form select {
+  min-width: 0;
 }
 
 .runner-support {
-  margin: 14px 0 18px;
-  border: 1px solid rgba(132, 176, 235, 0.24);
+  margin: 14px 18px 18px;
+  border: 1px solid rgba(255, 210, 76, 0.16);
   border-radius: 20px;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.04), transparent 28%),
-    rgba(6, 11, 20, 0.56);
+    rgba(9, 15, 29, 0.72);
 }
 
 .runner-support-grid {
@@ -538,6 +592,26 @@ h3 {
   display: grid;
   gap: 8px;
   min-width: 0;
+  margin-bottom: 18px;
+  max-height: 276px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 210, 76, 0.45) rgba(8, 14, 28, 0.42);
+}
+
+.entry-log::-webkit-scrollbar {
+  width: 8px;
+}
+
+.entry-log::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(8, 14, 28, 0.42);
+}
+
+.entry-log::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 210, 76, 0.45);
 }
 
 .entry-item {
@@ -546,11 +620,11 @@ h3 {
   gap: 12px;
   align-items: start;
   padding: 10px 12px;
-  border: 1px solid rgba(132, 176, 235, 0.22);
+  border: 1px solid rgba(255, 210, 76, 0.14);
   border-radius: 14px;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
-    rgba(9, 16, 29, 0.76);
+    rgba(12, 19, 36, 0.82);
   min-width: 0;
 }
 
@@ -1182,12 +1256,28 @@ label span {
   .hero-panel {
     grid-template-columns: 1fr;
   }
+
+  .entry-form {
+    grid-template-columns: minmax(0, 1fr) 118px;
+  }
+
+  .entry-form label:nth-of-type(3) {
+    grid-column: 1 / -1;
+  }
+
+  .entry-form button[type="submit"] {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 760px) {
   .chapter-shell {
     width: min(100vw - 16px, 1180px);
     padding-top: 18px;
+  }
+
+  .runner-grid {
+    grid-template-columns: 1fr;
   }
 
   .hero-totals,
