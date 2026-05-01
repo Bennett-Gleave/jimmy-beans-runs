@@ -55,7 +55,10 @@ const state = {
   runs: [],
   pendingDeleteRunId: null,
   participantModalMode: "create",
+  devOverride: null,
 };
+
+const DEV_FALLBACK_GOAL = PLANET_UNLOCKS.length * 1000;
 
 const els = {
   syncBanner: document.getElementById("syncBanner"),
@@ -735,6 +738,7 @@ function totalMinutesForRunner(runnerId) {
 }
 
 function totalPoints() {
+  if (state.devOverride) return state.devOverride.points;
   return state.runs.reduce((sum, run) => sum + Number(run.points || 0), 0);
 }
 
@@ -743,6 +747,7 @@ function totalMinutes() {
 }
 
 function totalGoalPoints() {
+  if (state.devOverride) return state.devOverride.goal;
   return state.participants.reduce((sum, participant) => sum + Number(participant.goalMiles || 0), 0);
 }
 
@@ -1452,6 +1457,168 @@ function bindUi() {
   });
 }
 
+function isLocalhost() {
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host.endsWith(".local");
+}
+
+function setupDevPanel() {
+  if (!isLocalhost()) return;
+
+  const launcher = document.createElement("button");
+  launcher.id = "devMilestoneLauncher";
+  launcher.type = "button";
+  launcher.textContent = "DEV";
+  launcher.title = "Toggle milestone dev panel";
+  document.body.appendChild(launcher);
+
+  const panel = document.createElement("aside");
+  panel.id = "devMilestonePanel";
+  panel.hidden = true;
+  panel.innerHTML = `
+    <header>
+      <strong>Dev · Milestones</strong>
+      <button type="button" data-dev-action="close" aria-label="Close">×</button>
+    </header>
+    <p class="dev-hint">Snap XP to a planet threshold. Press <kbd>[</kbd>/<kbd>]</kbd> to step.</p>
+    <div class="dev-buttons">
+      ${PLANET_UNLOCKS.map(
+        (planet, index) => `
+          <button type="button" data-dev-planet="${index}">
+            <span class="dev-index">${index + 1}</span>
+            <span class="dev-name">${planet.title}</span>
+          </button>
+        `,
+      ).join("")}
+    </div>
+    <div class="dev-buttons">
+      <button type="button" data-dev-action="zero">Zero XP</button>
+      <button type="button" data-dev-action="overflow">Beyond Trench (+10%)</button>
+      <button type="button" data-dev-action="off">Live data</button>
+    </div>
+    <p class="dev-state" data-dev-state></p>
+  `;
+  document.body.appendChild(panel);
+
+  const style = document.createElement("style");
+  style.textContent = `
+    #devMilestoneLauncher {
+      position: fixed; right: 16px; bottom: 16px; z-index: 9999;
+      padding: 8px 12px; border-radius: 999px; cursor: pointer;
+      background: rgba(8, 12, 22, 0.92); color: #ffd479;
+      border: 1px solid rgba(255, 212, 121, 0.45);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      font: 600 11px ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0.12em;
+    }
+    #devMilestoneLauncher:hover { background: rgba(255, 212, 121, 0.18); }
+    #devMilestoneLauncher.is-active { background: #ffd479; color: #08111f; }
+    #devMilestonePanel {
+      position: fixed; right: 16px; bottom: 56px; z-index: 9999;
+      width: 280px; padding: 14px 14px 12px; border-radius: 12px;
+      background: rgba(8, 12, 22, 0.92); color: #d8e3ff;
+      border: 1px solid rgba(120, 160, 220, 0.35);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+      font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px;
+      backdrop-filter: blur(6px);
+    }
+    #devMilestonePanel[hidden] { display: none; }
+    #devMilestonePanel header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    #devMilestonePanel header strong { letter-spacing: 0.06em; text-transform: uppercase; font-size: 11px; color: #ffd479; }
+    #devMilestonePanel header button { background: transparent; border: 0; color: #d8e3ff; font-size: 16px; cursor: pointer; line-height: 1; }
+    #devMilestonePanel .dev-hint { margin: 4px 0 8px; color: #9aa8c2; font-size: 11px; }
+    #devMilestonePanel .dev-hint kbd { background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-size: 10px; }
+    #devMilestonePanel .dev-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 6px; }
+    #devMilestonePanel .dev-buttons button {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 8px; border-radius: 6px; cursor: pointer;
+      background: rgba(40, 60, 100, 0.5); border: 1px solid rgba(120, 160, 220, 0.25);
+      color: #d8e3ff; font-size: 11px; text-align: left;
+    }
+    #devMilestonePanel .dev-buttons button:hover { background: rgba(80, 120, 200, 0.5); }
+    #devMilestonePanel .dev-buttons button.is-active { background: rgba(255, 212, 121, 0.25); border-color: #ffd479; color: #ffd479; }
+    #devMilestonePanel .dev-index { color: #ffd479; font-weight: 600; min-width: 12px; }
+    #devMilestonePanel .dev-state { margin-top: 8px; color: #9aa8c2; font-size: 10px; font-variant-numeric: tabular-nums; }
+  `;
+  document.head.appendChild(style);
+
+  const stateEl = panel.querySelector("[data-dev-state]");
+
+  function applyMilestone(index) {
+    const realGoal = state.participants.reduce((sum, p) => sum + Number(p.goalMiles || 0), 0);
+    const goal = realGoal > 0 ? realGoal : DEV_FALLBACK_GOAL;
+    const unit = goal / PLANET_UNLOCKS.length;
+    state.devOverride = { goal, points: Math.round(unit * (index + 1)) };
+    refresh();
+  }
+
+  function refresh() {
+    panel.querySelectorAll("[data-dev-planet]").forEach((btn) => {
+      btn.classList.toggle("is-active", state.devOverride?._planetIndex === Number(btn.dataset.devPlanet));
+    });
+    if (state.devOverride) {
+      stateEl.textContent = `Override · ${formatPoints(state.devOverride.points)} / ${formatPoints(state.devOverride.goal)} XP`;
+    } else {
+      stateEl.textContent = "Live data (no override)";
+    }
+    render();
+  }
+
+  panel.addEventListener("click", (event) => {
+    const planetBtn = event.target.closest("[data-dev-planet]");
+    if (planetBtn) {
+      const index = Number(planetBtn.dataset.devPlanet);
+      applyMilestone(index);
+      state.devOverride._planetIndex = index;
+      refresh();
+      return;
+    }
+    const actionBtn = event.target.closest("[data-dev-action]");
+    if (!actionBtn) return;
+    switch (actionBtn.dataset.devAction) {
+      case "zero": {
+        const realGoal = state.participants.reduce((sum, p) => sum + Number(p.goalMiles || 0), 0);
+        state.devOverride = { goal: realGoal > 0 ? realGoal : DEV_FALLBACK_GOAL, points: 0 };
+        break;
+      }
+      case "overflow": {
+        const realGoal = state.participants.reduce((sum, p) => sum + Number(p.goalMiles || 0), 0);
+        const goal = realGoal > 0 ? realGoal : DEV_FALLBACK_GOAL;
+        state.devOverride = { goal, points: Math.round(goal * 1.1) };
+        break;
+      }
+      case "off":
+        state.devOverride = null;
+        break;
+      case "close":
+        panel.hidden = true;
+        launcher.classList.remove("is-active");
+        return;
+    }
+    refresh();
+  });
+
+  launcher.addEventListener("click", () => {
+    panel.hidden = !panel.hidden;
+    launcher.classList.toggle("is-active", !panel.hidden);
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
+    if (event.key !== "[" && event.key !== "]") return;
+    const current = state.devOverride?._planetIndex ?? -1;
+    const next = event.key === "]"
+      ? Math.min(PLANET_UNLOCKS.length - 1, current + 1)
+      : Math.max(0, current - 1);
+    if (next === current && state.devOverride) return;
+    applyMilestone(next);
+    state.devOverride._planetIndex = next;
+    refresh();
+  });
+
+  refresh();
+}
+
 async function init() {
   renderCharacterOptions();
   renderGoalPresetOptions();
@@ -1459,6 +1626,7 @@ async function init() {
   syncMuteToggle();
   render();
   bindUi();
+  setupDevPanel();
 
   if (!hasFirebaseConfig()) {
     setSyncState("Firebase config missing.", "error");
